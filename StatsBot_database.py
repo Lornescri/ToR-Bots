@@ -3,14 +3,12 @@ import asyncio
 import platform
 import random
 
-import reddit_stats
-import reddit_stats_database
+import database_reader
 import time
 
-import hangman
 import passwords_and_tokens
 
-MAINTENANCE = False
+MAINTENANCE = True
 
 client = discord.Client()
 fingerbit = None
@@ -45,7 +43,7 @@ async def on_ready():
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     await client.send_message(fingerbit, "StatsBot online")
 
-    await start_watching()
+    await watch()
 
 
 @client.event
@@ -89,26 +87,10 @@ async def on_message(message):
 
 
 async def goodbad(message, args):
-    if len(args) == 1:
-        name = args[0]
-    else:
-        name = message.author.display_name
-
-    name = get_redditor_name(name)
-    await client.send_message(message.channel, "This may take a while")
-    await client.send_message(message.channel, reddit_stats.goodbad(name))
+    pass #TODO
 
 
 async def torstats(message, name, args):
-    """
-    Displays statistics about transcriptions for TranscribersOfReddit.
-    You can call it with or without a name to check.
-    """
-    await client.send_message(message.channel, "I'm only in beta, so forgive me for mistakes please"
-                                               "\nSadly I can only see and count your last 1000 comments."
-                                               "\nThe numbers can even be higher than your official Γ count, because "
-                                               "I am just counting all of your comments that look like transcriptions.")
-
     if len(args) > 1:
         await client.send_message(message.channel, ":warning: Please give me one or no argument.")
     else:
@@ -118,81 +100,70 @@ async def torstats(message, name, args):
         name = get_redditor_name(name)
 
         embed = discord.Embed(title="Stats for /u/" + name,
-                              description=reddit_stats.stats(name.replace("/u/", "").replace("u/", "").split(" ")[0]))
+                              description=database_reader.stats(get_redditor_name(name)))
         await client.send_message(message.channel, embed=embed)
 
 
-async def start_watching():
-    for u in tor_server.members:
-        print(u.display_name, reddit_stats.get_flair_count(get_redditor_name(u.display_name), 10))
-        reddit_stats_database.add_user(get_redditor_name(u.display_name), u.id)
-
-    await client.send_message(fingerbit, "First round is done!")
-
-    while True:
-        try:
-            await watch()
-        except (KeyboardInterrupt, SystemExit):
-            await client.close()
-        except:
-            print("------------- Error on watch -------------------")
-            await asyncio.sleep(2)
-
-
 async def watch():
+    lasttime = time.time()
     while True:
         nextit = set(tor_server.members)
+        i = 0
+        print("Iterating over", len(nextit), "users:")
         for u in nextit:
-            await get_flair_count(get_redditor_name(u.display_name), u)
-            await asyncio.sleep(0.1)
+            i += 1
+            if i % 50 == 0:
+                print(i, end="")
+            elif i % 10 == 0:
+                print(".", end="")
+
+            await add_user(u)
+
+        for thing in database_reader.get_new_flairs(lasttime):
+            print(thing)
+            await new_flair(thing[0], thing[1], thing[2], thing[3])
+
+        lasttime = time.time()
+        await asyncio.sleep(10)
+        print(" done")
 
         # print(">> Starting again <<")
 
-
-async def get_flair_count(name, u):
-    global user_flairs
-
-    reddit_name = get_redditor_name(name)
-    count = reddit_stats.get_flair_count(reddit_name, 5)
-
-    if count == -1:
-        return
-
-    if reddit_name not in user_flairs:
-        print("New name: " + reddit_name)
-        user_flairs[reddit_name] = count
-    else:
-        flair_count = count
-        if flair_count > user_flairs[reddit_name]:
-            await client.send_message(probechannel,
-                                      name + " got from " + str(user_flairs[reddit_name]) + " to " + str(flair_count))
-            await new_flair(name, user_flairs[reddit_name], flair_count, u)
-
-            with open("transcription_log", "a") as dat:
-                dat.write(" ".join(
-                    [str(time.time()), name, reddit_stats.last_trans(name), str(user_flairs[reddit_name]), "->",
-                     str(flair_count), "\n"]))
-                dat.close()
-
-            user_flairs[reddit_name] = flair_count
-
+async def add_user(u):
+    database_reader.add_user(get_redditor_name(u.display_name), u.id)
 
 async def gammas(channel):
-    pass
+    returnstring = ""
+    allTranscs = 0
+
+    for name, flair in sorted(database_reader.gammas(), key=lambda x: x[1], reverse=True):
+        returnstring += name.replace("_", "\\_") + ": " + str(flair) + "\n"
+        allTranscs += flair
+        if len(returnstring) >= 1500:
+            await client.send_message(channel, embed=discord.Embed(title="Official Γ count", description=returnstring))
+            returnstring = ""
+
+    returnstring += "Sum of all transcriptions: " + str(allTranscs) + " Γ"
+
+    if len(returnstring) >= 1:
+        await client.send_message(channel, embed=discord.Embed(title="Official Γ count", description=returnstring))
+        returnstring = ""
 
 
 async def new_flair(name, before, after, u):
-    mention = u.mention
-    if before < 51 <= after:
-        await client.send_message(bot_commands, "Congrats to " + mention + " for their green flair!")
-    if before < 101 <= after:
-        await client.send_message(bot_commands, "Orange flair? Not bad, " + mention + "!")
-    if before < 251 <= after:
-        await client.send_message(bot_commands, mention + " got purple flair, amazing!")
-    if before < 500 <= after:
-        await client.send_message(bot_commands, "Give it up for the new owner of golden flair, " + mention + "!")
-    if before < 1000 <= after:
-        await client.send_message(bot_commands, "Holy guacamole, " + mention + " earned their diamond flair!")
+    mention = (await client.get_user_info(u)).mention
+    await client.send_message(probechannel, name + " got from " + str(before) + " to " + str(after))
+    if not before == 0:
+        if before < 51 <= after:
+            await client.send_message(bot_commands, "Congrats to " + mention + " for their green flair!")
+        if before < 101 <= after:
+            await client.send_message(bot_commands, "Orange flair? Not bad, " + mention + "!")
+        if before < 251 <= after:
+            await client.send_message(bot_commands, mention + " got purple flair, amazing!")
+        if before < 500 <= after:
+            await client.send_message(bot_commands, "Give it up for the new owner of golden flair, " + mention + "!")
+        if before < 1000 <= after:
+            await client.send_message(bot_commands, "Holy guacamole, " + mention + " earned their diamond flair!")
 
 
 def insult():

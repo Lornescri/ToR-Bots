@@ -7,8 +7,6 @@ import hangman
 import sys
 import passwords_and_tokens
 
-MAINTENANCE = False
-
 client = discord.Client()
 fingerbit = None
 probechannel = None
