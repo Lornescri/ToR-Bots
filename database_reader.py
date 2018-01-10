@@ -25,6 +25,10 @@ def get_flair_count(reddit_name, discord_id):
 
         return row["official_gamma_count"]
 
+def get_total_gammas():
+    with connection.cursor() as cursor:
+        cursor.execute("select sum(official_gamma_count) as gamma_count from transcribers")
+        return cursor.fetchone()["gamma_count"]
 
 def gammas():
     with connection.cursor() as cursor:
@@ -32,23 +36,52 @@ def gammas():
 
     return [(row["name"], row["official_gamma_count"]) for row in cursor.fetchall()]
 
+def kumas():
+    with connection.cursor() as cursor:
+        cursor.execute("select official_gamma_count from transcribers where name = 'kumalumajuma'")
+
+    return cursor.fetchone()["official_gamma_count"]
+
 
 def stats(name):
     with connection.cursor() as cursor:
         cursor.execute(
-            "select official_gamma_count, counted_comments, count(comment_id) as comment_count, sum(length(content)) as total_length "
-            "from transcribers left outer join transcriptions on name = transcriber where name = %s group by name",
+            "select official_gamma_count, counted_comments, count(comment_id) as comment_count, sum(length(content)) as total_length,"
+            "sum(upvotes) as upvotes, sum(good_bot) as good_bot, sum(bad_bot) as bad_bot, "
+            "sum(good_human) as good_human, sum(bad_human) as bad_human, valid from transcribers "
+            "left outer join transcriptions on name = transcriber where name = %s group by name",
             (name,))
-        row = cursor.fetchone();
+        row = cursor.fetchone()
 
-    return ("Official Γ count: {}\n"
-            "Number of transcriptions I see: {}\n"
-            "Total character count of transcriptions I see: {}\n"
-            "*I counted {} of your total comments*".format(row["official_gamma_count"], row["comment_count"],
-                                                           row["total_length"], row["counted_comments"]))
+    if row is None:
+        return (None,)*10
 
+    if row["upvotes"] is None:
+        upvotes, good_bot, bad_bot, good_human, bad_human = 0, 0, 0, 0, 0
+    else:
+        upvotes, good_bot, bad_bot, good_human, bad_human = row["upvotes"], row["good_bot"], row["bad_bot"], row["good_human"], row["bad_human"]
 
+    return (
+        row["counted_comments"], row["official_gamma_count"], row["comment_count"], row["total_length"], upvotes,
+        good_bot, bad_bot, good_human, bad_human, row["valid"])
 
+def info():
+    with connection.cursor() as cursor:
+        cursor.execute("select * from info;")
+        row = cursor.fetchone()
+
+    return row["most_recent"], row["least_recent"], row["difference"], row["running"]
+
+def all_stats():
+    with connection.cursor() as cursor:
+        cursor.execute(
+            "select count(comment_id) as comment_count, sum(length(content)) as total_length,"
+            "sum(upvotes) as upvotes, sum(good_bot) as good_bot, sum(bad_bot) as bad_bot, "
+            "sum(good_human) as good_human, sum(bad_human) as bad_human from transcriptions")
+        row = cursor.fetchone()
+
+    return (row["comment_count"], row["total_length"], row["upvotes"],
+        row["good_bot"], row["bad_bot"], row["good_human"], row["bad_human"])
 
 
 def get_new_flairs(last_time):
@@ -64,3 +97,17 @@ def add_user(usr, discord_id):
     with connection.cursor() as cursor:
         cursor.execute("insert ignore into transcribers (name, discord_id) values (%s, %s)", (usr, discord_id))
     connection.commit()
+
+
+def get_transcriptions(name):
+    with connection.cursor() as cursor:
+        cursor.execute("select comment_id from transcriptions where transcriber = %s", (name,))
+
+        return [row["comment_id"] for row in cursor.fetchall()]
+
+
+def find_comments(name, text):
+    with connection.cursor() as cursor:
+        cursor.execute("select comment_id, content from transcriptions where transcriber = %s and content like %s",
+                       (name, '%' + text + '%'))
+        return [(row["comment_id"], row["content"]) for row in cursor.fetchall()]

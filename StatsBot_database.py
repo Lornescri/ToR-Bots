@@ -3,14 +3,19 @@ import asyncio
 import platform
 import random
 
+import praw
+
 import database_reader
 import time
 
 import passwords_and_tokens
 
-MAINTENANCE = True
+MAINTENANCE = False
 
 client = discord.Client()
+reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
+                     user_agent="Lornebot 0.0.1")
+
 fingerbit = None
 probechannel = None
 bot_commands = None
@@ -43,6 +48,7 @@ async def on_ready():
     print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
     await client.send_message(fingerbit, "StatsBot online")
 
+    refresh_leaderboard()
     await watch()
 
 
@@ -57,11 +63,30 @@ async def on_message(message):
         if message.content.startswith("!torstats"):
             await torstats(message, message.author.display_name, message.content.split(" ")[1:])
 
+        if message.content.startswith("!allstats"):
+            await allstats(message)
+
+        if message.content.startswith("!leaderboard"):
+            await post_leaderboard(message.channel)
+
+        if message.content.startswith("!where"):
+            await findComments(message, message.author.display_name, " ".join(message.content.split(" ")[1:]))
+
         if message.content.startswith("!watch"):
             await watch()
 
         if message.content.startswith("!gammas"):
             await gammas(message.channel)
+
+        if message.content.startswith("!permalink"):
+            await client.send_message(message.channel, "https://reddit.com" + reddit.comment(message.content.split(" ")[1]).permalink)
+
+        if message.content == ("!reset leaderboard"):
+            if message.author == fingerbit:
+                await client.send_message(message.channel, "Resetting leaderboard...")
+                await reset_leaderboard()
+            else:
+                await client.send_message(message.channel, "You have no power here!")
 
         if message.content == ("!restart stats"):
             if message.author == fingerbit:
@@ -71,7 +96,7 @@ async def on_message(message):
                 await client.send_message(message.channel, "You have no power here!")
 
         if message.content.startswith("!goodbad"):
-            await goodbad(message, message.content.split(" ")[1:])
+            await client.send_message(message.channel, "This command is deprecated, you can just type '!torstats' now.")
 
         if "good bot" in message.content.lower():
             await client.add_reaction(message, u"\U0001F916")
@@ -87,7 +112,7 @@ async def on_message(message):
 
 
 async def goodbad(message, args):
-    pass #TODO
+    pass  # TODO
 
 
 async def torstats(message, name, args):
@@ -99,56 +124,144 @@ async def torstats(message, name, args):
 
         name = get_redditor_name(name)
 
+        comment_count, official_gammas, trans_number, char_count, upvotes, good_bot, bad_bot, good_human, bad_human, valid = database_reader.stats(name)
+
+        if valid is None:
+            await client.send_message(message.channel, "I didn't know that user, try again in about {} seconds.".format(database_reader.info()[2]))
+            await add_user(name, None)
+            return
+        elif not valid:
+            await client.send_message(message.channel, "That user is invalid, tell {} if you don't think so.".format(fingerbit.mention))
+        elif official_gammas is None or official_gammas == 0:
+            await client.send_message(message.channel, "That user has no transcriptions")
+
+        output = ("*I counted {} of your total comments*\n"
+                  "**Official Γ count**: {} (~ {})\n"
+                  "**Number of transcriptions I see**: {}\n"
+                  "**Total characters**: {}   (*{} per transc.*)\n"
+                  "**Total upvotes**: {}   (*{} per transc.*)\n"
+                  "**Good Bot**: {}   (*{} per transc.*)\n"
+                  "**Bad Bot**: {}   (*{} per transc.*)\n"
+                  "**Good Human**: {}   (*{} per transc.*)\n"
+                  "**Bad Human**: {}   (*{} per transc.*)".format(
+            comment_count, official_gammas,
+            str(round(official_gammas/database_reader.kumas(), 2)) + " KLJ" if official_gammas/database_reader.kumas() >= 1
+            else str(round(1000 * official_gammas/database_reader.kumas(), 2)) + " mKLJ",
+            trans_number, char_count, round(char_count / trans_number, 2), upvotes,
+            round(upvotes / trans_number, 2), good_bot, round(good_bot / trans_number, 2), bad_bot, round(bad_bot / trans_number, 2),
+            good_human, round(good_human / trans_number, 2), bad_human, round(bad_human / trans_number, 2)))
+
         embed = discord.Embed(title="Stats for /u/" + name,
-                              description=database_reader.stats(get_redditor_name(name)))
+                              description=output)
         await client.send_message(message.channel, embed=embed)
+
+
+async def allstats(message):
+    trans_count, total_length, upvotes, good_bot, bad_bot, good_human, bad_human = database_reader.all_stats()
+
+    output = ("*Number of transcriptions I see: {}*\n"
+              "**Total Γ count**: {} (~ {} KLJ)\n"              
+              "**Character count**: {}\n"
+              "**Upvotes**: {}\n"
+              "**Good Bot**: {}\n"
+              "**Bad Bot**: {}\n"
+              "**Good Human**: {}\n"
+              "**Bad Human**: {}".format(
+        trans_count, database_reader.get_total_gammas(), round(database_reader.get_total_gammas()/database_reader.kumas(), 2),
+        total_length, upvotes, good_bot, bad_bot, good_human, bad_human))
+
+    embed = discord.Embed(title="Stats for everyone on Discord", description=output)
+    await client.send_message(message.channel, embed=embed)
 
 
 async def watch():
     lasttime = time.time()
     while True:
         nextit = set(tor_server.members)
-        i = 0
-        print("Iterating over", len(nextit), "users:")
+        print(".")
         for u in nextit:
-            i += 1
-            if i % 50 == 0:
-                print(i, end="")
-            elif i % 10 == 0:
-                print(".", end="")
 
-            await add_user(u)
+            await add_user(u.display_name, u.id)
 
+        gammas_changed = False
         for thing in database_reader.get_new_flairs(lasttime):
-            print(thing)
+            gammas_changed = True
             await new_flair(thing[0], thing[1], thing[2], thing[3])
+
+        if gammas_changed:
+            print("r", end="")
+            await refresh_leaderboard()
 
         lasttime = time.time()
         await asyncio.sleep(10)
-        print(" done")
 
-        # print(">> Starting again <<")
 
-async def add_user(u):
-    database_reader.add_user(get_redditor_name(u.display_name), u.id)
+async def findComments(message, display_name, param):
+    results = database_reader.find_comments(get_redditor_name(display_name), param)
+    if len(results) == 0:
+        await client.send_message(message.channel, "No matching transcription found")
+    elif len(results) > 10:
+        await client.send_message(message.channel, "More than 10 transcriptions found")
+    else:
+        await client.send_message(message.channel,
+                                  "**Results**:\n" + "\n".join(["```...{}...```\n<https://www.reddit.com{}>".format(
+                                      content[content.lower().find(param.lower()) - 10 : content.lower().find(param.lower()) + len(param) + 10],
+                                      reddit.comment(link).permalink) for link, content in results]))
+
+async def add_user(u, id):
+    database_reader.add_user(get_redditor_name(u), id)
+
+async def post_leaderboard(channel):
+    with open("leaderboard.txt", "a") as dat:
+        msg = await client.send_message(channel, "Waiting for refresh...")
+        dat.write(msg.id + " " + msg.channel.id + "\n")
+
+    refresh_leaderboard()
+
+async def refresh_leaderboard():
+
+    returnstring = "**Leaderboard**\n\n"
+    count = 0
+
+    for name, flair in sorted(database_reader.gammas(), key=lambda x: x[1], reverse=True)[:50]:
+        count += 1
+        returnstring += str(count) + ". " + name.replace("_", "\\_") + ": " + str(flair) + "\n"
+
+    returnstring += "\n*This Message will be refreshed to always be up-to-date*"
+
+    with open("leaderboard.txt", "r") as dat:
+        for line in dat.readlines():
+            line = line.strip()
+            if(not line == ""):
+                msg, channel = line.split(" ")
+                cha = client.get_channel(channel)
+                m = await client.get_message(cha, msg)
+                await client.edit_message(m, returnstring)
+
+async def reset_leaderboard():
+    open("leaderboard.txt", "w").close()
 
 async def gammas(channel):
     returnstring = ""
     allTranscs = 0
+    count = 0
 
     for name, flair in sorted(database_reader.gammas(), key=lambda x: x[1], reverse=True):
-        returnstring += name.replace("_", "\\_") + ": " + str(flair) + "\n"
+        count += 1
+        returnstring += str(count) + ". " + name.replace("_", "\\_") + ": " + str(flair) + "\n"
         allTranscs += flair
-        if len(returnstring) >= 1500:
-            await client.send_message(channel, embed=discord.Embed(title="Official Γ count", description=returnstring))
+        if count % 25 == 0:
+            await asyncio.sleep(0.5)
+            await client.send_message(channel,
+                                      embed=discord.Embed(title="Official Γ count", description=returnstring))
             returnstring = ""
 
     returnstring += "Sum of all transcriptions: " + str(allTranscs) + " Γ"
 
     if len(returnstring) >= 1:
+        await asyncio.sleep(0.5)
         await client.send_message(channel, embed=discord.Embed(title="Official Γ count", description=returnstring))
         returnstring = ""
-
 
 async def new_flair(name, before, after, u):
     mention = (await client.get_user_info(u)).mention
@@ -161,10 +274,10 @@ async def new_flair(name, before, after, u):
         if before < 251 <= after:
             await client.send_message(bot_commands, mention + " got purple flair, amazing!")
         if before < 500 <= after:
-            await client.send_message(bot_commands, "Give it up for the new owner of golden flair, " + mention + "!")
+            await client.send_message(bot_commands,
+                                      "Give it up for the new owner of golden flair, " + mention + "!")
         if before < 1000 <= after:
             await client.send_message(bot_commands, "Holy guacamole, " + mention + " earned their diamond flair!")
-
 
 def insult():
     column1 = []
@@ -198,9 +311,7 @@ def insult():
     return "Thou " + column1[random.randint(0, 49)] + " " + column2[random.randint(0, 49)] + " " + column3[
         random.randint(0, 49)] + "!"
 
-
 def get_redditor_name(name):
     return name.replace("/u/", "").replace("u/", "").split(" ")[0]
-
 
 client.run(passwords_and_tokens.discord_token)

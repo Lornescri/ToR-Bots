@@ -92,13 +92,12 @@ def analyze_user(usr, limit=1000, ignore_last=False):
                 cursor.execute("UPDATE transcribers SET reference_comment = %s WHERE name = %s", (com.id, usr))
                 reference_comment = com.id
             elif trans_check(com.body):
-                cursor.execute("insert ignore into transcriptions VALUES (%s, %s, %s, %s, now())",
+                cursor.execute("insert ignore into transcriptions (comment_id, transcriber, content, subreddit, found) VALUES (%s, %s, %s, %s, now())",
                                (com.id, usr, com.body, com.subreddit.id))
 
         cursor.execute("UPDATE transcribers SET counted_comments = counted_comments + %s WHERE name = %s", (i, usr))
 
         print(" done")
-
         update_gamma(reference_comment, new_name, row["official_gamma_count"], usr)
 
     connection.commit()
@@ -107,7 +106,8 @@ def analyze_user(usr, limit=1000, ignore_last=False):
 def update_gamma(reference_comment, new_name, gamma_before, usr):
     if reference_comment is not None:
         if reddit.comment(reference_comment).author_flair_text is None:
-            print("!!!!!!!!!!!!!!!!! No flair:", reference_comment)
+            cursor.execute("update transcribers set reference_comment = null where name = %s", (usr,))
+            print("No flair:", reference_comment)
         else:
             off_gamma = int(reddit.comment(reference_comment).author_flair_text.split(" ")[0])
             if not new_name and gamma_before is not None and gamma_before < off_gamma:
