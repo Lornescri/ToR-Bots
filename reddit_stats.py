@@ -134,7 +134,7 @@ def goodbad(name):
                 gb += 1
             if "bad bot" in rep:
                 bb += 1
-            if "good human" in rep:
+            if "good human" in rep and "I am a bot and" not in rep:
                 gh += 1
             if "bad human" in rep:
                 bh += 1
