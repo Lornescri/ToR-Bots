@@ -68,8 +68,9 @@ def analyze_trans(trans):
 if __name__ == "__main__":
     while (True):
         with connection.cursor() as cursor:
-            cursor.execute("select comment_id from transcriptions order by last_checked asc")
+            cursor.execute("select comment_id from transcriptions where unix_timestamp(now())-unix_timestamp(found) < (24 * 60 * 60) order by last_checked asc")
             trans_list = [reddit.comment(row["comment_id"]) for row in cursor.fetchall()]
             for trans in trans_list:
                 print(trans)
                 analyze_trans(trans)
+        time.sleep(60)

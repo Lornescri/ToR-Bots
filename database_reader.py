@@ -29,14 +29,43 @@ def get_flair_count(reddit_name, discord_id):
         return row["official_gamma_count"]
 
 
+def all_history():
+    with connection.cursor() as cursor:
+        cursor.execute("select sum(new_gamma-old_gamma) as difs from new_gammas")
+        total = get_total_gammas() - cursor.fetchone()["difs"]
+
+        cursor.execute("select new_gamma - old_gamma as dif, time from new_gammas")
+
+        rows = cursor.fetchall()
+        
+    vals = list()
+    times = list()
+
+    for dif, time in [(row["dif"], row["time"]) for row in rows]:
+        total += dif
+        vals.append(total)
+        times.append(time)
+
+    plt.plot(times, vals)
+        
+    plt.xlabel("Time")
+    plt.ylabel("Gammas")
+    plt.title("Server Gamma History")
+    plt.savefig("graph.png")
+    plt.clf()
+
+    return "graph.png"
+
+
 def plot_history(name, whole=False):
     with connection.cursor() as cursor:
         cursor.execute("select * from new_gammas where transcriber = %s", (name,))
         rows = cursor.fetchall()
+
     times = [row["time"] for row in rows]
     values = [row["new_gamma"] for row in rows]
 
-    if len(values) < 1:
+    if len(values) < 2:
         return False
 
     plt.plot(times, values)
