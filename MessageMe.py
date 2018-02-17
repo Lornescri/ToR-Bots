@@ -2,8 +2,6 @@ import discord
 import asyncio
 import platform
 
-import reddit_stats
-import hangman
 import sys
 import passwords_and_tokens
 
