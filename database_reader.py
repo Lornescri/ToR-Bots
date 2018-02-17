@@ -68,13 +68,13 @@ def plot_history(name, whole=False):
     if len(values) < 2:
         return False
 
-    plt.plot(times, values)
+    plt.plot(times, values, color="black")
     first = values[0]
     last = values[-1]
     if whole or first <= 50 < last:
-        plt.axhline(y=51, color="green")
+        plt.axhline(y=51, color="lime")
     if whole or first <= 100 < last:
-        plt.axhline(y=101, color="orange")
+        plt.axhline(y=101, color="teal")
     if whole or first <= 250 < last:
         plt.axhline(y=251, color="purple")
     if whole or first <= 500 < last:

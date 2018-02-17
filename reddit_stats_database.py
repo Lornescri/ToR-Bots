@@ -40,10 +40,11 @@ def analyze_user(usr, limit=1000, ignore_last=False):
         else:
             new_name = False
             row = cursor.fetchone()
-            if row["valid"] == False:
-                print("User is invalid")
-                output += "User " + usr + " is invalid!\n"
-                return output
+            # Invalid users don't cost much time
+            #if row["valid"] == False:
+            #    print("User is invalid")
+            #    output += "User " + usr + " is invalid!\n"
+            #    return output
         try:
             u = reddit.redditor(usr)
             if (not new_name and not ignore_last and row["last_checked_comment"] is not None

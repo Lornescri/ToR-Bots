@@ -234,7 +234,7 @@ async def post_leaderboard(channel):
         msg = await client.send_message(channel, "Waiting for refresh...")
         dat.write(msg.id + " " + msg.channel.id + "\n")
 
-    refresh_leaderboard()
+    await refresh_leaderboard()
 
 
 async def refresh_leaderboard():
