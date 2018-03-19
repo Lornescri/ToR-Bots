@@ -46,10 +46,12 @@ def all_history():
         vals.append(total)
         times.append(time)
 
-    plt.plot(times, vals)
+    plt.plot(times, vals, color="black")
         
     plt.xlabel("Time")
     plt.ylabel("Gammas")
+    plt.xticks(rotation=90)
+    plt.gcf().subplots_adjust(bottom=0.3)
     plt.title("Server Gamma History")
     plt.savefig("graph.png")
     plt.clf()
@@ -79,10 +81,14 @@ def plot_history(name, whole=False):
         plt.axhline(y=251, color="purple")
     if whole or first <= 500 < last:
         plt.axhline(y=501, color="gold")
-    if whole or last >= 1000:
+    if whole or first < 1000 <= last:
         plt.axhline(y=1000, color="aqua")
+    if whole or last >= 2500:
+        plt.axhline(y=2500, color="deeppink")
     plt.xlabel("Time")
     plt.ylabel("Gammas")
+    plt.xticks(rotation=90)
+    plt.gcf().subplots_adjust(bottom=0.3)
     plt.title("Gamma history of /u/{}".format(name))
     plt.savefig("graph.png")
     plt.clf()

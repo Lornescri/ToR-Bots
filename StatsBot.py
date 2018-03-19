@@ -138,8 +138,7 @@ async def torstats(message, name, args):
             name)
 
         if valid is None:
-            await client.send_message(message.channel, "I didn't know that user, try again in about {} seconds.".format(
-                database_reader.info()[2]))
+            await client.send_message(message.channel, "I don't know that user, sorry!")
             await add_user(name, None)
             return
         elif not valid:
@@ -321,14 +320,16 @@ async def new_flair(name, before, after, u):
         if before < 51 <= after:
             await client.send_message(bot_commands, "Congrats to " + mention + " for their green flair!")
         if before < 101 <= after:
-            await client.send_message(bot_commands, "Orange flair? Not bad, " + mention + "!")
+            await client.send_message(bot_commands, "Teal flair? Not bad, " + mention + "!")
         if before < 251 <= after:
             await client.send_message(bot_commands, mention + " got purple flair, amazing!")
-        if before < 500 <= after:
+        if before < 501 <= after:
             await client.send_message(bot_commands,
                                       "Give it up for the new owner of golden flair, " + mention + "!")
-        if before < 1000 <= after:
+        if before < 1001 <= after:
             await client.send_message(bot_commands, "Holy guacamole, " + mention + " earned their diamond flair!")
+        if before < 2501 <= after:
+            await client.send_message(bot_commands, "Ruby flair! " + mention + ", that is absolutely amazing!")
 
 
 def insult():
