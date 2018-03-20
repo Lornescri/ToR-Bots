@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import passwords_and_tokens
 
-connection = pymysql.connect(host="localhost",
+connection = pymysql.connect(host=passwords_and_tokens.sql_ip,
                              user=passwords_and_tokens.sql_user,
                              password=passwords_and_tokens.sql_password,
                              db="torstats",

@@ -60,14 +60,6 @@ async def on_message(message):
     if MAINTENANCE and message.content.startswith("!") and message.author.name != "Fingerbit":
         await client.send_message(message.channel, ":warning: This bot is under maintenance, sorry. :warning:")
     else:
-        if message.content.startswith("!torstats"):
-            await torstats(message, message.author.display_name, message.content.split(" ")[1:])
-
-        if message.content.startswith("!allstats"):
-            await allstats(message)
-
-        if message.content.startswith("!serverinfo"):
-            await client.send_message(message.channel, "This is a good server with good persons.")
 
         if message.content.startswith("!leaderboard"):
             await post_leaderboard(message.channel)
@@ -125,68 +117,7 @@ async def on_message(message):
             await client.send_message(message.channel, insult())
 
 
-async def torstats(message, name, args):
-    if len(args) > 1:
-        await client.send_message(message.channel, ":warning: Please give me one or no argument.")
-    else:
-        if len(args) == 1:
-            name = args[0]
 
-        name = get_redditor_name(name)
-
-        comment_count, official_gammas, trans_number, char_count, upvotes, good_bot, bad_bot, good_human, bad_human, valid = database_reader.stats(
-            name)
-
-        if valid is None:
-            await client.send_message(message.channel, "I don't know that user, sorry!")
-            await add_user(name, None)
-            return
-        elif not valid:
-            await client.send_message(message.channel,
-                                      "That user is invalid, tell {} if you don't think so.".format(fingerbit.mention))
-        elif official_gammas is None or official_gammas == 0:
-            await client.send_message(message.channel, "That user has no transcriptions")
-
-        output = ("*I counted {} of your total comments*\n"
-                  "**Official Γ count**: {} (~ {})\n"
-                  "**Number of transcriptions I see**: {}\n"
-                  "**Total characters**: {}   (*{} per transc.*)\n"
-                  "**Total upvotes**: {}   (*{} per transc.*)\n"
-                  "**Good Bot**: {}   (*{} per transc.*)\n"
-                  "**Bad Bot**: {}   (*{} per transc.*)\n"
-                  "**Good Human**: {}   (*{} per transc.*)\n"
-                  "**Bad Human**: {}   (*{} per transc.*)".format(
-            comment_count, official_gammas,
-            str(round(official_gammas / database_reader.kumas(),
-                      2)) + " KLJ" if official_gammas / database_reader.kumas() >= 1
-            else str(round(1000 * official_gammas / database_reader.kumas(), 2)) + " mKLJ",
-            trans_number, char_count, round(char_count / trans_number, 2), upvotes,
-            round(upvotes / trans_number, 2), good_bot, round(good_bot / trans_number, 2), bad_bot,
-            round(bad_bot / trans_number, 2),
-            good_human, round(good_human / trans_number, 2), bad_human, round(bad_human / trans_number, 2)))
-
-        embed = discord.Embed(title="Stats for /u/" + name,
-                              description=output)
-        await client.send_message(message.channel, embed=embed)
-
-
-async def allstats(message):
-    trans_count, total_length, upvotes, good_bot, bad_bot, good_human, bad_human = database_reader.all_stats()
-
-    output = ("*Number of transcriptions I see: {}*\n"
-              "**Total Γ count**: {} (~ {} KLJ)\n"
-              "**Character count**: {}\n"
-              "**Upvotes**: {}\n"
-              "**Good Bot**: {}\n"
-              "**Bad Bot**: {}\n"
-              "**Good Human**: {}\n"
-              "**Bad Human**: {}".format(
-        trans_count, database_reader.get_total_gammas(),
-        round(database_reader.get_total_gammas() / database_reader.kumas(), 2),
-        total_length, upvotes, good_bot, bad_bot, good_human, bad_human))
-
-    embed = discord.Embed(title="Stats for everyone on Discord", description=output)
-    await client.send_message(message.channel, embed=embed)
 
 
 async def watch():
