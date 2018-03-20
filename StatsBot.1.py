@@ -80,9 +80,6 @@ async def on_message(message):
         if message.content.startswith("!context_history"):
             await history(message, message.content.split(" ")[1:], True)
 
-        if message.content.startswith("!gammas"):
-            await gammas(message.channel)
-
         if message.content.startswith("!permalink"):
             await client.send_message(message.channel,
                                       "https://reddit.com" + reddit.comment(message.content.split(" ")[1]).permalink)
@@ -220,28 +217,6 @@ async def history(msg, args, whole=False):
     else:
         await client.send_file(msg.channel, path)
 
-
-async def gammas(channel):
-    returnstring = ""
-    allTranscs = 0
-    count = 0
-
-    for name, flair in sorted(database_reader.gammas(), key=lambda x: x[1], reverse=True):
-        count += 1
-        returnstring += str(count) + ". " + name.replace("_", "\\_") + ": " + str(flair) + "\n"
-        allTranscs += flair
-        if count % 25 == 0:
-            await asyncio.sleep(0.5)
-            await client.send_message(channel,
-                                      embed=discord.Embed(title="Official Γ count", description=returnstring))
-            returnstring = ""
-
-    returnstring += "Sum of all transcriptions: " + str(allTranscs) + " Γ"
-
-    if len(returnstring) >= 1:
-        await asyncio.sleep(0.5)
-        await client.send_message(channel, embed=discord.Embed(title="Official Γ count", description=returnstring))
-        returnstring = ""
 
 
 async def new_flair(name, before, after, u):

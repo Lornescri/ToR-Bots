@@ -1,4 +1,4 @@
-import discord
+import discord, asyncio
 from discord.ext import commands
 import database_reader
 
@@ -71,6 +71,30 @@ class TextCommands():
     @commands.command()
     async def serverinfo(self):
         await self.bot.say("This is a good server with good persons")
+
+    @commands.command(pass_context=True)
+    async def gammas(self, ctx):
+        channel = ctx.message.channel
+        returnstring = ""
+        allTranscs = 0
+        count = 0
+
+        for name, flair in sorted(database_reader.gammas(), key=lambda x: x[1], reverse=True):
+            count += 1
+            returnstring += str(count) + ". " + name.replace("_", "\\_") + ": " + str(flair) + "\n"
+            allTranscs += flair
+            if count % 25 == 0:
+                await asyncio.sleep(0.5)
+                await self.bot.send_message(channel,
+                                        embed=discord.Embed(title="Official Γ count", description=returnstring))
+                returnstring = ""
+
+        returnstring += "Sum of all transcriptions: " + str(allTranscs) + " Γ"
+
+        if len(returnstring) >= 1:
+            await asyncio.sleep(0.5)
+            await self.bot.send_message(channel, embed=discord.Embed(title="Official Γ count", description=returnstring))
+            returnstring = ""
 
 
 def setup(bot):
