@@ -4,6 +4,9 @@ import database_reader, passwords_and_tokens
 import praw
 
 BOT_OWNER="193053876692189184" # TODO: Get owner from bot owner set in main file
+TOR="351752423972536331"
+BOTCOMMANDS="351752424442167297"
+PROBE="351752424442167297"
 
 bot_commands = None
 probechannel = None
@@ -58,12 +61,12 @@ class Leaderboard():
         self.bot = bot
 
     async def on_ready(self): # no decorator needed, https://stackoverflow.com/questions/48038953/bot-event-in-a-cog-discord-py
-        probechannel = self.bot.get_channel("387401723943059460")
-        bot_commands = self.bot.get_channel("372168291617079296")
-        tor_server = self.bot.get_server("318873523579781132")
+        probechannel = self.bot.get_channel(PROBE)
+        bot_commands = self.bot.get_channel(BOTCOMMANDS)
+        tor_server = self.bot.get_server(TOR)
         
         await refresh_leaderboard(self.bot)
-        await watch(self.bot)
+        await watch_internal(self.bot, tor_server)
         # SET probechannel and botcommands
         
 
@@ -79,7 +82,7 @@ class Leaderboard():
     @commands.command(hidden=True, pass_context=True)
     @commands.check(owner)
     async def watch(self, ctx):
-        await watch(self.bot)
+        await watch_internal(self.bot, tor_server)
 
     @commands.command(hidden=True, pass_context=True)
     @commands.check(owner)
@@ -96,13 +99,16 @@ class Leaderboard():
 def setup(bot):
     bot.add_cog(Leaderboard(bot))
 
-async def watch(bot):
+async def watch_internal(bot, tor_server):
     lasttime = time.time()
     while True:
         nextit = set(tor_server.members)
         print(".")
         for u in nextit:
-            await add_user(u.display_name, u.id)
+            try:
+                await add_user(u.display_name, u.id)
+            except:
+                print("FAILED TO ADD USER")
 
         gammas_changed = False
         for thing in database_reader.get_new_flairs(lasttime):
