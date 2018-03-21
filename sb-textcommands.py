@@ -1,6 +1,12 @@
 import discord, asyncio
 from discord.ext import commands
-import database_reader
+import database_reader, passwords_and_tokens
+import praw
+
+
+reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
+                     user_agent="Lornebot 0.0.1")
+
 
 def get_redditor_name(name):
     return name.replace("/u/", "").replace("u/", "").split(" ")[0]
@@ -14,7 +20,7 @@ class TextCommands():
 
     @commands.command(pass_context=True)
     async def torstats(self, ctx, person:str = None):
-        name = person if person else get_redditor_name(ctx.message.author.display_name)
+        name = get_redditor_name(person) if person else get_redditor_name(ctx.message.author.display_name)
         comment_count, official_gammas, trans_number, char_count, upvotes, good_bot, bad_bot, good_human, bad_human, valid = database_reader.stats(name)
 
         if valid is None:
@@ -23,7 +29,7 @@ class TextCommands():
             return
         elif not valid:
             await self.bot.send_message(ctx.message.channel,
-                                      "That user is invalid, tell {} if you don't think so.".format(fingerbit.mention))
+                                      "That user is invalid, tell Lornescri if you don't think so.")
         elif official_gammas is None or official_gammas == 0:
             await self.bot.send_message(ctx.message.channel, "That user has no transcriptions")
 
@@ -95,7 +101,12 @@ class TextCommands():
             await asyncio.sleep(0.5)
             await self.bot.send_message(channel, embed=discord.Embed(title="Official Γ count", description=returnstring))
             returnstring = ""
+    @commands.command()
+    async def permalink(self, thread: str):
+        await self.bot.say("https://reddit.com" + reddit.comment(thread).permalink)
 
-
+    @permalink.error
+    async def permalink_error(self, ctx, error):
+        await self.bot.say("That made an error! Are you sure you provided a valid ID?")
 def setup(bot):
     bot.add_cog(TextCommands(bot))

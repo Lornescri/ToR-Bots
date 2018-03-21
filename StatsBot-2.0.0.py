@@ -4,7 +4,7 @@ import passwords_and_tokens
 description = '''A bot to show your ToR stats on the discord.'''
 
 # this specifies what extensions to load when the bot starts up
-startup_extensions = ["sb-textcommands"]
+startup_extensions = ["sb-textcommands", "sb-graphs"]
 
 bot = commands.Bot(command_prefix='!', description=description)
 
