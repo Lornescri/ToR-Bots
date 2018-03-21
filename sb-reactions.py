@@ -9,7 +9,7 @@ def insult():
     column3 = []
 
     # Read contents of column1.txt and add the contents to the 1st list
-    file1 = open("column1.txt", "r")
+    file1 = open("data/column1.txt", "r")
     line = file1.readline()
     while line != "":
         column1.append(line.strip())
@@ -17,7 +17,7 @@ def insult():
     file1.close()
 
     # Read contents of column2.txt and add the contents to the 2nd list
-    file2 = open("column2.txt", "r")
+    file2 = open("data/column2.txt", "r")
     line = file2.readline()
     while line != "":
         column2.append(line.strip())
@@ -25,7 +25,7 @@ def insult():
     file2.close()
 
     # Read contents of column3.txt and add the contents to the 3rd list
-    file3 = open("column3.txt", "r")
+    file3 = open("data/column3.txt", "r")
     line = file3.readline()
     while line != "":
         column3.append(line.strip())
