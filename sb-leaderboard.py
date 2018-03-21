@@ -5,6 +5,7 @@ import praw
 
 bot_commands = None
 probechannel = None
+tor_server = None
 
 reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
                      user_agent="Lornebot 0.0.1")
@@ -62,6 +63,9 @@ class Leaderboard():
         await refresh_leaderboard()
         await watch(self.bot)
         # SET probechannel and botcommands
+        probechannel = client.get_channel("387401723943059460")
+        bot_commands = client.get_channel("372168291617079296")
+        tor_server = client.get_server("318873523579781132")
 
     async def __local_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
@@ -126,4 +130,3 @@ async def new_flair(bot, name, before, after, u):
             await bot.send_message(bot_commands, "Holy guacamole, " + mention + " earned their diamond flair!")
         if before < 2501 <= after:
             await bot.send_message(bot_commands, "Ruby flair! " + mention + ", that is absolutely amazing!")
-
