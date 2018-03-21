@@ -29,6 +29,15 @@ def get_flair_count(reddit_name, discord_id):
         return row["official_gamma_count"]
 
 
+def get_last_x_hours(reddit_name, hours=24):
+    with connection.cursor() as cursor:
+        cursor.execute("select * from new_gammas where transcriber = %s", (reddit_name,))
+        rows = cursor.fetchall()
+
+    rows = [x for x in rows if x["time"] > datetime.datetime.now()-datetime.timedelta(hours=hours)]
+    return rows
+
+
 def all_history():
     with connection.cursor() as cursor:
         cursor.execute("select sum(new_gamma-old_gamma) as difs from new_gammas")

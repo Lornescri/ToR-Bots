@@ -131,6 +131,32 @@ class TextCommands():
                                             lookingFor.lower()) + len(lookingFor) + 10],
                                         reddit.comment(link).permalink) for link, content in results]))
 
+    @commands.command(pass_context=True)
+    async def progress(self, ctx, person:str=None):
+        """
+        Returns your progress along the 100/24 way
+        """
+
+        progress_bar = "[----------]"
+        name = get_redditor_name(person) if person else get_redditor_name(ctx.message.author.display_name)
+        rows = database_reader.get_last_x_hours(name, 24)
+        #rows = list(range(130))
+        bars = int((len(rows) / 10) - ((len(rows) / 10) % 1)) # Gets progress out of 10 (can be higher than 10)
+        if len(rows) < 100:
+            for i in range(bars):
+                print(i)
+                a = [x for x in progress_bar]
+                a[i+1] = "#"
+                progress_bar = "".join(a)
+            
+            out = f"`{progress_bar}` - You've done {len(rows)} transcriptions in the last 24 hours. Keep going, you can do it!"
+
+        elif len(rows) == 100:
+            out = f"`[##########]` - The little one has only gone and done it! You've done {len(rows)} / 24 :D"
+        else:
+            out = f"`[##########]####` - holy hecc, you've done {len(rows)} transcriptions in 24 hours :O. That's a lot of transcriptions in 24 hours"
+
+        await self.bot.say(out)
 
 
 def setup(bot):
