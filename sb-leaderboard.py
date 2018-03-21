@@ -58,12 +58,14 @@ class Leaderboard():
         self.bot = bot
 
     async def on_ready(self): # no decorator needed, https://stackoverflow.com/questions/48038953/bot-event-in-a-cog-discord-py
-        await refresh_leaderboard(self.bot)
-        await watch(self.bot)
-        # SET probechannel and botcommands
         probechannel = self.bot.get_channel("387401723943059460")
         bot_commands = self.bot.get_channel("372168291617079296")
         tor_server = self.bot.get_server("318873523579781132")
+        
+        await refresh_leaderboard(self.bot)
+        await watch(self.bot)
+        # SET probechannel and botcommands
+        
 
     async def __local_check(self, ctx):
         return await self.bot.is_owner(ctx.author)
