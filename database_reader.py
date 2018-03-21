@@ -1,5 +1,5 @@
 import pymysql
-import matplotlib
+import matplotlib, datetime
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
 
@@ -90,6 +90,50 @@ def plot_history(name, whole=False):
     plt.xticks(rotation=90)
     plt.gcf().subplots_adjust(bottom=0.3)
     plt.title("Gamma history of /u/{}".format(name))
+    plt.savefig("graph.png")
+    plt.clf()
+
+    return "graph.png"
+
+
+def plot_rate(name):
+
+    with connection.cursor() as cursor:
+        cursor.execute("select * from new_gammas where transcriber = %s", (name,))
+        rows = cursor.fetchall()
+
+    #print(rows[0])
+    start = datetime.datetime(2017, 11, 1)
+    end = datetime.datetime.now()
+    step = datetime.timedelta(days=1)
+
+
+    result = []
+    while start < end:
+        result.append(start)
+        start += step
+
+    times = result
+    values = [0 for i in range(len(times))]
+
+    
+    def find_ind(times, dt):
+        for i, t in enumerate(times):
+            try:
+                if dt >= t and times[i + 1] > dt:
+                    return i
+            except:
+                return len(times) - 1
+    for gammachange in rows:
+        values[find_ind(times, gammachange["time"])] += gammachange["new_gamma"] - gammachange["old_gamma"]
+    [print(times[i], values[i]) for i,v in enumerate(values) if v > 100]
+
+    plt.plot(times, values, linewidth=0.2)
+
+
+    plt.xlabel("Time")
+    plt.ylabel("Gammas")
+    plt.title("Gamma gain rate of /u/{}".format(name))
     plt.savefig("graph.png")
     plt.clf()
 
