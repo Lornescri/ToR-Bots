@@ -32,8 +32,7 @@ def insult():
         line = file3.readline()
     file3.close()
 
-    return f"Thou {column1[random.randint(0, 49)]} {column2[random.randint(0, 49)]} {column3[
-        random.randint(0, 49)]}!"
+    return f"Thou {column1[random.randint(0, 49)]} {column2[random.randint(0, 49)]} {column3[random.randint(0, 49)]}!"
 
 
 
