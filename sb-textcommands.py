@@ -111,6 +111,11 @@ class TextCommands():
     async def permalink_error(self, ctx, error):
         await self.bot.say("That made an error! Are you sure you provided a valid ID?")
 
+    @commands.command()
+    async def goodbad(self):
+        await self.bot.say("This command is deprecated, you can just type '!torstats' now.")
+
+
     @commands.command(pass_context=True)
     async def where(self, ctx, *args):
         lookingFor = " ".join(args)
@@ -122,8 +127,8 @@ class TextCommands():
         else:
             await self.bot.say(
                                     "**Results**:\n" + "\n".join(["```...{}...```\n<https://www.reddit.com{}>".format(
-                                        content[content.lower().find(param.lower()) - 10: content.lower().find(
-                                            param.lower()) + len(param) + 10],
+                                        content[content.lower().find(lookingFor.lower()) - 10: content.lower().find(
+                                            lookingFor.lower()) + len(lookingFor) + 10],
                                         reddit.comment(link).permalink) for link, content in results]))
 
 

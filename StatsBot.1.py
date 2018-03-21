@@ -25,31 +25,7 @@ guesser = None
 
 user_flairs = dict()
 
-
-@client.event
-async def on_ready():
-    global fingerbit
-    global probechannel
-    global bot_commands
-    global tor_server
-
-    fingerbit = await client.get_user_info("256084554375364613")
-    probechannel = client.get_channel("387401723943059460")
-    bot_commands = client.get_channel("372168291617079296")
-    tor_server = client.get_server("318873523579781132")
-
-    print('Logged in as ' + client.user.name + ' (ID:' + client.user.id + ') | Connected to ' + str(
-        len(client.servers)) + ' servers | Connected to ' + str(len(set(client.get_all_members()))) + ' users')
-    print('--------')
-    print('Current Discord.py Version: {} | Current Python Version: {}'.format(discord.__version__,
-                                                                               platform.python_version()))
-    print('--------')
-    print('Use this link to invite {}:'.format(client.user.name))
-    print('https://discordapp.com/oauth2/authorize?client_id={}&scope=bot&permissions=8'.format(client.user.id))
-    await client.send_message(fingerbit, "StatsBot online")
-
-    await refresh_leaderboard()
-    await watch()
+    
 
 
 @client.event
@@ -60,22 +36,6 @@ async def on_message(message):
     if MAINTENANCE and message.content.startswith("!") and message.author.name != "Fingerbit":
         await client.send_message(message.channel, ":warning: This bot is under maintenance, sorry. :warning:")
     else:
-
-        if message.content.startswith("!leaderboard"):
-            await post_leaderboard(message.channel)
-
-        if message.content.startswith("!where"):
-            await findComments(message, message.author.display_name, " ".join(message.content.split(" ")[1:]))
-
-        if message.content == ("!restart stats"):
-            if message.author == fingerbit:
-                await client.send_message(message.channel, "Restarting StatsBot...")
-                await client.close()
-            else:
-                await client.send_message(message.channel, "You have no power here!")
-
-        if message.content.startswith("!goodbad"):
-            await client.send_message(message.channel, "This command is deprecated, you can just type '!torstats' now.")
 
         if "good bot" in message.content.lower():
             await client.add_reaction(message, u"\U0001F916")
@@ -114,18 +74,7 @@ async def watch():
         await asyncio.sleep(10)
 
 
-async def findComments(message, display_name, param):
-    results = database_reader.find_comments(get_redditor_name(display_name), param)
-    if len(results) == 0:
-        await client.send_message(message.channel, "No matching transcription found")
-    elif len(results) > 10:
-        await client.send_message(message.channel, "More than 10 transcriptions found")
-    else:
-        await client.send_message(message.channel,
-                                  "**Results**:\n" + "\n".join(["```...{}...```\n<https://www.reddit.com{}>".format(
-                                      content[content.lower().find(param.lower()) - 10: content.lower().find(
-                                          param.lower()) + len(param) + 10],
-                                      reddit.comment(link).permalink) for link, content in results]))
+
 
 
 async def add_user(u, id):
