@@ -14,6 +14,8 @@ def get_redditor_name(name):
 async def add_user(u, id):
     database_reader.add_user(get_redditor_name(u), id)
 
+
+    
 class TextCommands():
     def __init__(self, bot):
         self.bot = bot
@@ -108,5 +110,23 @@ class TextCommands():
     @permalink.error
     async def permalink_error(self, ctx, error):
         await self.bot.say("That made an error! Are you sure you provided a valid ID?")
+
+    @commands.command(pass_context=True)
+    async def where(self, ctx, *args):
+        lookingFor = " ".join(args)
+        results = database_reader.find_comments(get_redditor_name(ctx.message.author.display_name), lookingFor)
+        if len(results) == 0:
+            await self.bot.say("No matching transcription found")
+        elif len(results) > 10:
+            await self.bot.say("More than 10 transcriptions found")
+        else:
+            await self.bot.say(
+                                    "**Results**:\n" + "\n".join(["```...{}...```\n<https://www.reddit.com{}>".format(
+                                        content[content.lower().find(param.lower()) - 10: content.lower().find(
+                                            param.lower()) + len(param) + 10],
+                                        reddit.comment(link).permalink) for link, content in results]))
+
+
+
 def setup(bot):
     bot.add_cog(TextCommands(bot))

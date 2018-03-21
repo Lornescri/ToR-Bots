@@ -67,30 +67,6 @@ async def on_message(message):
         if message.content.startswith("!where"):
             await findComments(message, message.author.display_name, " ".join(message.content.split(" ")[1:]))
 
-        if message.content.startswith("!watch"):
-            await watch()
-
-        if message.content.startswith("!history"):
-            await history(message, message.content.split(" ")[1:])
-
-        
-        if message.content.startswith("!all_history"):
-            await all_history(message)
-
-        if message.content.startswith("!context_history"):
-            await history(message, message.content.split(" ")[1:], True)
-
-        if message.content.startswith("!permalink"):
-            await client.send_message(message.channel,
-                                      "https://reddit.com" + reddit.comment(message.content.split(" ")[1]).permalink)
-
-        if message.content == ("!reset leaderboard"):
-            if message.author == fingerbit:
-                await client.send_message(message.channel, "Resetting leaderboard...")
-                await reset_leaderboard()
-            else:
-                await client.send_message(message.channel, "You have no power here!")
-
         if message.content == ("!restart stats"):
             if message.author == fingerbit:
                 await client.send_message(message.channel, "Restarting StatsBot...")
@@ -186,36 +162,6 @@ async def refresh_leaderboard():
 
 async def reset_leaderboard():
     open("leaderboard.txt", "w").close()
-
-
-async def all_history(msg):
-    path = database_reader.all_history()
-    if not path:
-        await client.send_message(msg.channel,
-                                  "No history avaliable, sorry!")
-
-    else:
-        await client.send_file(msg.channel, path)
-
-
-async def history(msg, args, whole=False):
-    if len(args) > 1:
-        await client.send_message(msg.channel, ":warning: Please give me one or no argument.")
-        return
-
-    if len(args) == 0:
-        name = msg.author.display_name
-
-    else:
-        name = args[0]
-
-    path = database_reader.plot_history(get_redditor_name(name), whole)
-    if not path:
-        await client.send_message(msg.channel,
-                                  "No history avaliable, sorry! (*You have to do 2 transcriptions since joining the discord server*)")
-
-    else:
-        await client.send_file(msg.channel, path)
 
 
 
