@@ -56,7 +56,7 @@ async def refresh_leaderboard(bot):
                 m = await bot.get_message(cha, msg)
                 await bot.edit_message(m, returnstring)
 
-class Leaderboard():
+class RoutineCog():
     def __init__(self, bot):
         self.bot = bot
 
@@ -97,7 +97,7 @@ class Leaderboard():
         await self.bot.say("Done!")
     
 def setup(bot):
-    bot.add_cog(Leaderboard(bot))
+    bot.add_cog(RoutineCog(bot))
 
 async def watch_internal(bot, tor_server):
     lasttime = time.time()

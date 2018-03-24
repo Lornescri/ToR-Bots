@@ -1,8 +1,8 @@
-import pymysql
+import pymysql, time
 import matplotlib, datetime
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
-
+import matplotlib.dates as mdates
 import passwords_and_tokens
 
 connection = pymysql.connect(host=passwords_and_tokens.sql_ip,
@@ -111,37 +111,37 @@ def plot_rate(name):
         cursor.execute("select * from new_gammas where transcriber = %s", (name,))
         rows = cursor.fetchall()
 
-    #print(rows[0])
+
+    # Code gets number of days between when the bot was first collecting data, to now
     start = datetime.datetime(2017, 11, 1)
     end = datetime.datetime.now()
     step = datetime.timedelta(days=1)
-
 
     result = []
     while start < end:
         result.append(start)
         start += step
-
-    times = result
-    values = [0 for i in range(len(times))]
-
     
-    def find_ind(times, dt):
-        for i, t in enumerate(times):
-            try:
-                if dt >= t and times[i + 1] > dt:
-                    return i
-            except:
-                return len(times) - 1
-    for gammachange in rows:
-        values[find_ind(times, gammachange["time"])] += gammachange["new_gamma"] - gammachange["old_gamma"]
-    [print(times[i], values[i]) for i,v in enumerate(values) if v > 100]
+    # Create new subplot because some funcs only work on subplots
+    fig, ax = plt.subplots(1,1) 
 
-    plt.plot(times, values, linewidth=0.2)
+    # Create dataset; a list of datetime objects
+    x = [mdates.epoch2num(time.mktime(row["time"].timetuple())) for row in rows]
+    
+    # Make
+    ax.hist(x, len(result))
+    # Set date format to be a bit shorter
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m.%y'))
 
+    # Rotate labels 90^o
+    ax.xaxis.set_tick_params(labelrotation=90.0)
 
+    # Don't cut off date
+    plt.gcf().subplots_adjust(bottom=0.22)
+
+    # Standard code
     plt.xlabel("Time")
-    plt.ylabel("Gammas")
+    plt.ylabel("Gammas / Day")
     plt.title("Gamma gain rate of /u/{}".format(name))
     plt.savefig("graph.png")
     plt.clf()
