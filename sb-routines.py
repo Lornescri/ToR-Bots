@@ -61,9 +61,14 @@ class RoutineCog():
         self.bot = bot
 
     async def on_ready(self): # no decorator needed, https://stackoverflow.com/questions/48038953/bot-event-in-a-cog-discord-py
-        global probechannel = self.bot.get_channel(PROBE)
-        global bot_commands = self.bot.get_channel(BOTCOMMANDS)
-        global tor_server = self.bot.get_server(TOR)
+        global probechannel
+        global bot_commands
+        global tor_server
+        
+        
+        probechannel = self.bot.get_channel(PROBE)
+        bot_commands = self.bot.get_channel(BOTCOMMANDS)
+        tor_server = self.bot.get_server(TOR)
         
         await refresh_leaderboard(self.bot)
         await watch_internal(self.bot, tor_server)
