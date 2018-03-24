@@ -142,7 +142,10 @@ class TextCommands():
         rows = database_reader.get_last_x_hours(name, 24)
         #rows = list(range(130))
         bars = int((len(rows) / 10) - ((len(rows) / 10) % 1)) # Gets progress out of 10 (can be higher than 10)
-        if len(rows) < 100:
+        
+        if len(rows) == 0:
+            out = "`[----------]` - You know exactly how many you've done, you slacker."
+        elif len(rows) < 100:
             for i in range(bars):
                 print(i)
                 a = [x for x in progress_bar]
