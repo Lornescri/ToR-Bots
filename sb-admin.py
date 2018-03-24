@@ -3,7 +3,7 @@ from discord.ext import commands
 import database_reader, passwords_and_tokens
 import praw
 
-BOT_OWNER="193053876692189184" # TODO: Get owner from bot owner set in main file
+BOT_OWNER="256084554375364613" # TODO: Get owner from bot owner set in main file
 
 
 def owner(ctx):

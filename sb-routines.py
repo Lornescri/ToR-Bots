@@ -3,10 +3,10 @@ from discord.ext import commands
 import database_reader, passwords_and_tokens
 import praw
 
-BOT_OWNER="193053876692189184" # TODO: Get owner from bot owner set in main file
-TOR="351752423972536331"
-BOTCOMMANDS="351752424442167297"
-PROBE="351752424442167297"
+BOT_OWNER="256084554375364613" # TODO: Get owner from bot owner set in main file
+TOR="318873523579781132"
+BOTCOMMANDS="372168291617079296"
+PROBE="387401723943059460"
 
 bot_commands = None
 probechannel = None
