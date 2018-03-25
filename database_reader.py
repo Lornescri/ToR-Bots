@@ -1,11 +1,11 @@
-import pymysql
-import matplotlib
+import pymysql, time
+import matplotlib, datetime
 matplotlib.use("AGG")
 import matplotlib.pyplot as plt
-
+import matplotlib.dates as mdates
 import passwords_and_tokens
 
-connection = pymysql.connect(host="localhost",
+connection = pymysql.connect(host=passwords_and_tokens.sql_ip,
                              user=passwords_and_tokens.sql_user,
                              password=passwords_and_tokens.sql_password,
                              db="torstats",
@@ -27,6 +27,15 @@ def get_flair_count(reddit_name, discord_id):
             return -1
 
         return row["official_gamma_count"]
+
+
+def get_last_x_hours(reddit_name, hours=24):
+    with connection.cursor() as cursor:
+        cursor.execute("select * from new_gammas where transcriber = %s", (reddit_name,))
+        rows = cursor.fetchall()
+
+    rows = [x for x in rows if x["time"] > datetime.datetime.now()-datetime.timedelta(hours=hours)]
+    return rows
 
 
 def all_history():
@@ -90,6 +99,50 @@ def plot_history(name, whole=False):
     plt.xticks(rotation=90)
     plt.gcf().subplots_adjust(bottom=0.3)
     plt.title("Gamma history of /u/{}".format(name))
+    plt.savefig("graph.png")
+    plt.clf()
+
+    return "graph.png"
+
+
+def plot_rate(name):
+
+    with connection.cursor() as cursor:
+        cursor.execute("select * from new_gammas where transcriber = %s", (name,))
+        rows = cursor.fetchall()
+
+
+    # Code gets number of days between when the bot was first collecting data, to now
+    start = datetime.datetime(2017, 11, 1)
+    end = datetime.datetime.now()
+    step = datetime.timedelta(days=1)
+
+    result = []
+    while start < end:
+        result.append(start)
+        start += step
+    
+    # Create new subplot because some funcs only work on subplots
+    fig, ax = plt.subplots(1,1) 
+
+    # Create dataset; a list of datetime objects
+    x = [mdates.epoch2num(time.mktime(row["time"].timetuple())) for row in rows]
+    
+    # Make
+    ax.hist(x, len(result))
+    # Set date format to be a bit shorter
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m.%y'))
+
+    # Rotate labels 90^o
+    ax.xaxis.set_tick_params(labelrotation=90.0)
+
+    # Don't cut off date
+    plt.gcf().subplots_adjust(bottom=0.22)
+
+    # Standard code
+    plt.xlabel("Time")
+    plt.ylabel("Gammas / Day")
+    plt.title("Gamma gain rate of /u/{}".format(name))
     plt.savefig("graph.png")
     plt.clf()
 
