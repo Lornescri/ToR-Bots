@@ -2,22 +2,19 @@ import discord, asyncio, time
 from discord.ext import commands
 import database_reader, passwords_and_tokens
 import praw
+from permission import is_owner
 
 BOT_OWNER="256084554375364613" # TODO: Get owner from bot owner set in main file
 TOR="318873523579781132"
 BOTCOMMANDS="372168291617079296"
-PROBE="387401723943059460"
+GAMMACHANNEL="387401723943059460"
 
 bot_commands = None
-probechannel = None
+gammachannel = None
 tor_server = None
 
 reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
                      user_agent="Lornebot 0.0.1")
-def owner(ctx):
-    if ctx.message.author.id == BOT_OWNER:
-        return True
-    return False
 
 def get_redditor_name(name):
     return name.replace("/u/", "").replace("u/", "").split(" ")[0]
@@ -61,12 +58,12 @@ class RoutineCog():
         self.bot = bot
 
     async def on_ready(self): # no decorator needed, https://stackoverflow.com/questions/48038953/bot-event-in-a-cog-discord-py
-        global probechannel
+        global gammachannel
         global bot_commands
         global tor_server
         
         
-        probechannel = self.bot.get_channel(PROBE)
+        gammachannel = self.bot.get_channel(GAMMACHANNEL)
         bot_commands = self.bot.get_channel(BOTCOMMANDS)
         tor_server = self.bot.get_server(TOR)
         
@@ -79,24 +76,24 @@ class RoutineCog():
         return await self.bot.is_owner(ctx.author)
 
     @commands.command(hidden=True, pass_context=True)
-    @commands.check(owner)
+    @commands.check(is_owner)
     async def reset_leaderboard(self, ctx):
         await self.bot.say("Resetting leaderboard...")
         await reset_leaderboard_internal()
 
     @commands.command(hidden=True, pass_context=True)
-    @commands.check(owner)
+    @commands.check(is_owner)
     async def watch(self, ctx):
         await watch_internal(self.bot, tor_server)
 
     @commands.command(hidden=True, pass_context=True)
-    @commands.check(owner)
+    @commands.check(is_owner)
     async def restart(self, ctx):
         await self.bot.say("Restarting StatsBot")
         await self.bot.close()
 
     @commands.command(hidden=True, pass_context=True)
-    @commands.check(owner)
+    @commands.check(is_owner)
     async def post_leaderboard(self, ctx):
         await post_leaderboard_internal(self.bot, ctx.message.channel)
         await self.bot.say("Done!")
@@ -110,10 +107,7 @@ async def watch_internal(bot, tor_server):
         nextit = set(tor_server.members)
         print(".")
         for u in nextit:
-            try:
-                await add_user(u.display_name, u.id)
-            except:
-                print("FAILED TO ADD USER")
+            await add_user(u.display_name, u.id)
 
         gammas_changed = False
         for thing in database_reader.get_new_flairs(lasttime):
@@ -130,7 +124,7 @@ async def watch_internal(bot, tor_server):
 
 async def new_flair(bot, name, before, after, u):
     mention = (await bot.get_user_info(u)).mention
-    await bot.send_message(probechannel, name + " got from " + str(before) + " to " + str(after))
+    await bot.send_message(gammachannel, name + " got from " + str(before) + " to " + str(after))
     if not before == 0:
         if before < 51 <= after:
             await bot.send_message(bot_commands, "Congrats to " + mention + " for their green flair!")

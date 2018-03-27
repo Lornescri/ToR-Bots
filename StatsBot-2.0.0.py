@@ -1,5 +1,5 @@
 from discord.ext import commands
-import passwords_and_tokens
+import passwords_and_tokens, inspect
 
 description = '''A bot to show your ToR stats on the discord.'''
 
@@ -32,6 +32,36 @@ async def unload(extension_name : str):
     """Unloads an extension."""
     bot.unload_extension(extension_name)
     await bot.say("{} unloaded.".format(extension_name))
+
+
+@commands.command(pass_context=True, hidden=True)
+async def debug(self, ctx, *, code : str):
+    """Evaluates code."""
+    code = code.strip('` ')
+    python = '```py\n{}\n```'
+    result = None
+
+    env = {
+        'bot': self.bot,
+        'ctx': ctx,
+        'message': ctx.message,
+        'server': ctx.message.server,
+        'channel': ctx.message.channel,
+        'author': ctx.message.author
+    }
+
+    env.update(globals())
+
+    try:
+        result = eval(code, env)
+        if inspect.isawaitable(result):
+            result = await result
+    except Exception as e:
+        await self.bot.say(python.format(type(e).__name__ + ': ' + str(e)))
+        return
+
+    await self.bot.say(python.format(result))
+
 
 
 if __name__ == "__main__":

@@ -1,20 +1,9 @@
-import discord, asyncio, time, platform
+import discord, asyncio, time, platform, socket, datetime
 from discord.ext import commands
 import database_reader, passwords_and_tokens
 import praw
+from permission import is_owner
 
-BOT_OWNER="256084554375364613" # TODO: Get owner from bot owner set in main file
-
-
-def owner(ctx):
-    if ctx.message.author.id == BOT_OWNER:
-        return True
-    return False
-
-bot_commands = None
-probechannel = None
-tor_server = None
-owner_person = None
 
 reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
                      user_agent="Lornebot 0.0.1")
@@ -26,6 +15,7 @@ def get_redditor_name(name):
 async def add_user(u, id):
     database_reader.add_user(get_redditor_name(u), id)
 
+cogload = time.time()
 
 
 
@@ -35,12 +25,15 @@ class Administration():
 
     async def on_ready(self): # no decorator needed, https://stackoverflow.com/questions/48038953/bot-event-in-a-cog-discord-py
         # SET probechannel and botcommands
-        probechannel = self.bot.get_channel("387401723943059460")
-        bot_commands = self.bot.get_channel("372168291617079296")
-        tor_server = self.bot.get_server("318873523579781132")
-        owner_person = await self.bot.get_user_info(BOT_OWNER)
 
-        await self.bot.send_message(owner_person, "StatsBot online")
+        bootup = self.bot.get_channel("428212915473219604")
+
+        await self.bot.send_message(bootup, "<@&428212811290771477>", embed=discord.Embed(
+            title="StatsBot Booted",
+            description=f"Booted in {round(time.time() - cogload)}s on hostname {socket.gethostname()}",
+            colour=0x00FF00,
+            timestamp=datetime.datetime.now()
+        ))
         servers=len(self.bot.servers)
         pl = "s" if servers > 1 else ""
         print("=====================")
@@ -56,7 +49,6 @@ class Administration():
         return await self.bot.is_owner(ctx.author)
 
     @commands.command()
-    @commands.check(owner)
     async def ping(self):
         await self.bot.say("Pong!")
     
