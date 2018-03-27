@@ -42,7 +42,7 @@ async def debug(ctx, *, code : str):
     result = None
 
     env = {
-        'bot': self.bot,
+        'bot': bot,
         'ctx': ctx,
         'message': ctx.message,
         'server': ctx.message.server,
