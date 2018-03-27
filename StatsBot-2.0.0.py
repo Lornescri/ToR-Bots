@@ -29,7 +29,8 @@ async def unload(extension_name : str):
 
 
 @bot.command(pass_context=True, hidden=True)
-async def debug(ctx, *, code : str):
+@commands.check(is_owner)
+async def e(ctx, *, code : str):
     """Evaluates code."""
     code = code.strip('` ')
     python = '```py\n{}\n```'
