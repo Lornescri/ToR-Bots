@@ -34,7 +34,7 @@ async def unload(extension_name : str):
     await bot.say("{} unloaded.".format(extension_name))
 
 
-@commands.command(pass_context=True, hidden=True)
+@bot.command(pass_context=True, hidden=True)
 async def debug(self, ctx, *, code : str):
     """Evaluates code."""
     code = code.strip('` ')
