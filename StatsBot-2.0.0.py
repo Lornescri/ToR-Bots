@@ -8,9 +8,15 @@ startup_extensions = ["sb-textcommands", "sb-graphs", "sb-admin", "sb-reactions"
 
 bot = commands.Bot(command_prefix='!', description=description)
 
+BOT_OWNER="256084554375364613" # TODO: Get owner from bot owner set in main file
 
+def owner(ctx):
+    if ctx.message.author.id == BOT_OWNER:
+        return True
+    return False
 
-@bot.command()
+@bot.command(hidden=True)
+@commands.check(owner)
 async def load(extension_name : str):
     """Loads an extension."""
     try:
@@ -20,7 +26,8 @@ async def load(extension_name : str):
         return
     await bot.say("{} loaded.".format(extension_name))
 
-@bot.command()
+@bot.command(hidden=True)
+@commands.check(owner)
 async def unload(extension_name : str):
     """Unloads an extension."""
     bot.unload_extension(extension_name)
