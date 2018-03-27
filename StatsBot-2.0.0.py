@@ -35,7 +35,7 @@ async def unload(extension_name : str):
 
 
 @bot.command(pass_context=True, hidden=True)
-async def debug(self, ctx, *, code : str):
+async def debug(ctx, *, code : str):
     """Evaluates code."""
     code = code.strip('` ')
     python = '```py\n{}\n```'
@@ -57,10 +57,10 @@ async def debug(self, ctx, *, code : str):
         if inspect.isawaitable(result):
             result = await result
     except Exception as e:
-        await self.bot.say(python.format(type(e).__name__ + ': ' + str(e)))
+        await bot.say(python.format(type(e).__name__ + ': ' + str(e)))
         return
 
-    await self.bot.say(python.format(result))
+    await bot.say(python.format(result))
 
 
 
