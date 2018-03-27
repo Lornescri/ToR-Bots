@@ -1,7 +1,7 @@
 import discord
 import asyncio
 import platform
-
+import datetime
 import sys
 import passwords_and_tokens
 
@@ -20,11 +20,16 @@ user_flairs = dict()
 async def on_ready():
     global fingerbit
 
-    fingerbit = await client.get_user_info("256084554375364613")
+    fingerbit = client.get_channel("428212915473219604")
 
     message = " ".join(sys.argv[1:])
 
-    await client.send_message(fingerbit, message)
+    await client.send_message(fingerbit, "<@&428212811290771477>", embed=discord.Embed(
+            title="Message:",
+            description=message,
+            colour=0xFF0000,
+            timestamp=datetime.datetime.now()
+        ))
     await client.close()
 
 client.run(passwords_and_tokens.discord_token)
