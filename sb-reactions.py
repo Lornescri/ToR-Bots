@@ -52,6 +52,9 @@ class ReactionsReactor():
 
         if "send rudes" in message.content.lower():
             await self.bot.send_message(message.channel, insult())
+            
+        if "toria" in message.content.lower():
+            await self.bot.add_reaction(message, u"\U0001F618")
     
 def setup(bot):
     bot.add_cog(ReactionsReactor(bot))
