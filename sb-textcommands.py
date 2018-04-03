@@ -199,6 +199,10 @@ class TextCommands():
         if difference <= 0:
             return await self.bot.say("Please provide a gamma that's higher than your current count 😛")
 
+        # is person jabba?
+        if len(rows) == 0:
+            return await self.bot.say(f"From your rate over the past 48 hours, I estimate that it will take you `∞ days, ∞ hours, ∞ minutes` {'to get your butt into gear and start transcribing ;)' if ctx.message.author.id == "280001404020588544" else 'to get to Γ' + str(future_gamma) + ' (you haven\'t done any in the past 48 hours)'}")
+
         rate_per_minute = len(rows) / ( 2 * 24 * 60 ) # turn from transcriptions per 48hr to per minute
 
         minutes = round(difference / rate_per_minute)
