@@ -147,11 +147,7 @@ class TextCommands():
         results = database_reader.find_comments(get_redditor_name(ctx.message.author.display_name), lookingFor)
 
         entries = [
-            f"\
-https://reddit.com{reddit.comment(link).permalink}\
-```\
-...{content[content.lower().find(lookingFor.lower()) - 10: content.lower().find(lookingFor.lower()) + len(lookingFor) + 10]}...\
-```"
+            f"https://reddit.com{reddit.comment(link).permalink}\n```...{content[content.lower().find(lookingFor.lower()) - 10: content.lower().find(lookingFor.lower()) + len(lookingFor) + 10]}...```"
             for link, content in results
         ]
 
