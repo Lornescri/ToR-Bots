@@ -32,8 +32,9 @@ def minutesToHuman(minutes):
 
     sList = list(s)
 
-    if sList[-1] == ",":
+    if sList[-2] + sList[-1] == ", ":
         sList[-1] = ""
+        sList[-2] = ""
 
     s = "".join(sList)
 
