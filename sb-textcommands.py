@@ -155,7 +155,7 @@ class TextCommands():
             for link, content in results
         ]
 
-        await Pages(self.bot, message=ctx. message, entries=entries).paginate(start_page=1, per_page=5)
+        await Pages(self.bot, message=ctx. message, entries=entries, per_page=5).paginate(start_page=1)
 
     @commands.command(pass_context=True)
     async def progress(self, ctx, person:str=None):
