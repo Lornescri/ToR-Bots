@@ -14,7 +14,22 @@ def get_redditor_name(name):
 async def add_user(u, id):
     database_reader.add_user(get_redditor_name(u), id)
 
+def minutesToHuman(minutes):
+    days = 0
+    hours = 0
+    mins = 0
 
+    while minutes >= (60 * 24):
+        minutes -= (60 * 24)
+        days += 1
+
+    while minutes >= 60:
+        minutes -= 60
+        hours += 1
+
+    mins += minutes
+
+    return f"{str(days) + ' days, ' if days else ''}{str(hours) + ' hours, ' if hours else ''}{str(mins) + ' minutes.' if mins else ''}"
     
 class TextCommands():
     def __init__(self, bot):
@@ -160,6 +175,31 @@ class TextCommands():
             out = f"`[##########]####` - holy hecc, you've done {len(rows)} transcriptions in 24 hours :O. That's a lot of transcriptions in 24 hours"
 
         await self.bot.say(out)
+
+    @commands.command(pass_context=True)
+    async def until(self, ctx, future_gamma:int):
+        name = get_redditor_name(ctx.message.author.display_name)
+        rows = database_reader.get_last_x_hours(name, 48)
+        # Over 48 hours to give most accurate results (hopefully)
+
+        #row["counted_comments"], row["official_gamma_count"], row["comment_count"], row["total_length"], upvotes,
+        # good_bot, bad_bot, good_human, bad_human, row["valid"]
+        x, gamma, a, b, c, d, e, f, g, h = database_reader.stats(name) # ignore everything except gamma count
+
+        difference = future_gamma - gamma 
+        if difference <= 0:
+            return await self.bot.say("Please provide a gamma that's higher than your current count 😛")
+
+        rate_per_minute = len(rows) / ( 2 * 24 * 60 ) # turn from transcriptions per 48hr to per minute
+
+        minutes = round(difference / rate_per_minute)
+
+        time_ = minutesToHuman(minutes)
+
+        await self.bot.say(f"I think it will take you `{time_}` to get from Γ{gamma} to Γ{future_gamma}")
+
+
+
 
 
 def setup(bot):
