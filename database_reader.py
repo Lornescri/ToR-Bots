@@ -235,8 +235,12 @@ def get_transcriptions(name):
         return [row["comment_id"] for row in cursor.fetchall()]
 
 
-def find_comments(name, text):
+def find_comments(name, text, all=False):
     with connection.cursor() as cursor:
-        cursor.execute("select comment_id, content from transcriptions where transcriber = %s and content like %s",
+        if not all:
+            cursor.execute("select comment_id, content from transcriptions where transcriber = %s and content like %s",
+                       (name, '%' + text + '%'))
+        else:
+            cursor.execute("select comment_id, content from transcriptions where content like %s",
                        (name, '%' + text + '%'))
         return [(row["comment_id"], row["content"]) for row in cursor.fetchall()]

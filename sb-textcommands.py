@@ -154,6 +154,18 @@ class TextCommands():
         await Pages(self.bot, message=ctx. message, entries=entries, per_page=5).paginate(start_page=1)
 
     @commands.command(pass_context=True)
+    async def where(self, ctx, *args):
+        lookingFor = " ".join(args)
+        results = database_reader.find_comments(get_redditor_name(ctx.message.author.display_name), lookingFor, all=True)
+
+        entries = [
+            f"https://reddit.com{reddit.comment(link).permalink}\n```...{content[content.lower().find(lookingFor.lower()) - 10: content.lower().find(lookingFor.lower()) + len(lookingFor) + 10]}...```"
+            for link, content in results
+        ]
+
+        await Pages(self.bot, message=ctx. message, entries=entries, per_page=5).paginate(start_page=1)
+
+    @commands.command(pass_context=True)
     async def progress(self, ctx, person:str=None):
         """
         Returns your progress along the 100/24 way
