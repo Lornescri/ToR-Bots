@@ -204,7 +204,7 @@ class TextCommands():
 
         time_ = minutesToHuman(minutes)
 
-        await self.bot.say(f"I estimate that it will take you `{time_}` to get from Γ{gamma} to Γ{future_gamma}")
+        await self.bot.say(f"From your rate over the past 48 hours, I estimate that it will take you `{time_}` to get from Γ{gamma} to Γ{future_gamma}")
 
 
 
