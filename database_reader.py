@@ -242,5 +242,5 @@ def find_comments(name, text, all=False):
                        (name, '%' + text + '%'))
         else:
             cursor.execute("select comment_id, content from transcriptions where content like %s",
-                       (name, '%' + text + '%'))
+                       ('%' + text + '%'))
         return [(row["comment_id"], row["content"]) for row in cursor.fetchall()]
