@@ -201,7 +201,8 @@ class TextCommands():
 
         # is person jabba?
         if len(rows) == 0:
-            return await self.bot.say(f"From your rate over the past 48 hours, I estimate that it will take you `∞ days, ∞ hours, ∞ minutes` {'to get your butt into gear and start transcribing ;)' if ctx.message.author.id == "280001404020588544" else 'to get to Γ' + str(future_gamma) + ' (you haven\'t done any in the past 48 hours)'}")
+            motivation = 'to get your butt into gear and start transcribing ;)' if ctx.message.author.id == '280001404020588544' else 'to get to Γ' + str(future_gamma) + ' (you haven\'t done any in the past 48 hours)'
+            return await self.bot.say(f"From your rate over the past 48 hours, I estimate that it will take you `∞ days, ∞ hours, ∞ minutes` {motivation}")
 
         rate_per_minute = len(rows) / ( 2 * 24 * 60 ) # turn from transcriptions per 48hr to per minute
 
