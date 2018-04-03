@@ -1,6 +1,7 @@
 from discord.ext import commands
 from permission import is_owner
 import passwords_and_tokens, inspect
+from util import Pages
 
 description = '''A bot to show your ToR stats on the discord.'''
 
@@ -38,6 +39,7 @@ async def e(ctx, *, code : str):
 
     env = {
         'bot': bot,
+        "Pages": Pages,
         'ctx': ctx,
         'message': ctx.message,
         'server': ctx.message.server,

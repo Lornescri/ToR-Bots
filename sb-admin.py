@@ -3,7 +3,7 @@ from discord.ext import commands
 import database_reader, passwords_and_tokens
 import praw
 from permission import is_owner
-
+from util import Pages, CannotPaginate
 
 reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
                      user_agent="Lornebot 0.0.1")

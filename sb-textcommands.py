@@ -2,6 +2,7 @@ import discord, asyncio
 from discord.ext import commands
 import database_reader, passwords_and_tokens
 import praw
+from util import Pages, CannotPaginate
 
 
 reddit = praw.Reddit(client_id=passwords_and_tokens.reddit_id, client_secret=passwords_and_tokens.reddit_token,
@@ -144,16 +145,17 @@ class TextCommands():
     async def where(self, ctx, *args):
         lookingFor = " ".join(args)
         results = database_reader.find_comments(get_redditor_name(ctx.message.author.display_name), lookingFor)
-        if len(results) == 0:
-            await self.bot.say("No matching transcription found")
-        elif len(results) > 10:
-            await self.bot.say("More than 10 transcriptions found")
-        else:
-            await self.bot.say(
-                                    "**Results**:\n" + "\n".join(["```...{}...```\n<https://www.reddit.com{}>".format(
-                                        content[content.lower().find(lookingFor.lower()) - 10: content.lower().find(
-                                            lookingFor.lower()) + len(lookingFor) + 10],
-                                        reddit.comment(link).permalink) for link, content in results]))
+
+        entries = [
+            f"\
+            https://reddit.com{reddit.comment(link).permalink}\
+            ```\
+            ...{content[content.lower().find(lookingFor.lower()) - 10: content.lower().find(lookingFor.lower()) + len(lookingFor) + 10]}...`\
+            ```"
+            for link, content in results
+        ]
+
+        await Pages(self.bot, message=ctx. message, entries=entries).paginate(start_page=1, per_page=5)
 
     @commands.command(pass_context=True)
     async def progress(self, ctx, person:str=None):
