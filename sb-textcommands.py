@@ -28,8 +28,16 @@ def minutesToHuman(minutes):
         hours += 1
 
     mins += minutes
+    s = f"{str(days) + ' days, ' if days else ''}{str(hours) + ' hours, ' if hours else ''}{str(mins) + ' minutes.' if mins else ''}"
 
-    return f"{str(days) + ' days, ' if days else ''}{str(hours) + ' hours, ' if hours else ''}{str(mins) + ' minutes.' if mins else ''}"
+    sList = list(s)
+
+    if sList[-1] == ",":
+        sList[-1] = ""
+
+    s = "".join(sList)
+
+    return s
     
 class TextCommands():
     def __init__(self, bot):
@@ -196,7 +204,7 @@ class TextCommands():
 
         time_ = minutesToHuman(minutes)
 
-        await self.bot.say(f"I think it will take you `{time_}` to get from Γ{gamma} to Γ{future_gamma}")
+        await self.bot.say(f"I estimate that it will take you `{time_}` to get from Γ{gamma} to Γ{future_gamma}")
 
 
 
