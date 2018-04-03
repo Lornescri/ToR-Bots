@@ -154,7 +154,7 @@ class TextCommands():
         await Pages(self.bot, message=ctx. message, entries=entries, per_page=5).paginate(start_page=1)
 
     @commands.command(pass_context=True)
-    async def where(self, ctx, *args):
+    async def all_where(self, ctx, *args):
         lookingFor = " ".join(args)
         results = database_reader.find_comments(get_redditor_name(ctx.message.author.display_name), lookingFor, all=True)
 
