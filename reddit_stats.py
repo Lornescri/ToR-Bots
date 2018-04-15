@@ -47,8 +47,13 @@ def analyze_user(usr, limit=1000, ignore_last=False):
             #    return output
         try:
             u = reddit.redditor(usr)
+            try:
+                first_comment = next(u.comments.new(limit=1))
+            except StopIteration:
+                print("No comments")
+                return
             if (not new_name and not ignore_last and row["last_checked_comment"] is not None
-                    and list(u.comments.new(limit=1))[0] == row["last_checked_comment"]):
+                    and first_comment == row["last_checked_comment"]):
                 print("No new comments")
                 update_gamma(row["reference_comment"], new_name, row["official_gamma_count"], usr)
                 connection.commit()
