@@ -17,6 +17,9 @@ connection = pymysql.connect(host="localhost",
 
 tor = reddit.subreddit("TranscribersOfReddit")
 
+with open("ignored_users.txt", "r") as dat:
+    ignored_users = [line.strip().lower() for line in dat.readlines()]
+
 
 def trans_check(st):
     return ("human" in st and
@@ -28,6 +31,11 @@ def trans_check(st):
 
 def analyze_user(usr, limit=1000, ignore_last=False):
     print("Fetching stats for /u/" + usr)
+
+    if usr.lower() in ignored_users:
+        print("User ignored")
+        return
+
     output = ""
     with connection.cursor() as cursor:
 
