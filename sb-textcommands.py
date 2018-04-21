@@ -199,6 +199,10 @@ class TextCommands():
     async def until(self, ctx, future_gamma:int):
         name = get_redditor_name(ctx.message.author.display_name)
         rows = database_reader.get_last_x_hours(name, 48)
+
+        if rows is None:
+            return await self.bot.say("I don't know that user yet, sorry")
+
         # Over 48 hours to give most accurate results (hopefully)
 
         #row["counted_comments"], row["official_gamma_count"], row["comment_count"], row["total_length"], upvotes,
@@ -208,6 +212,8 @@ class TextCommands():
         difference = future_gamma - gamma 
         if difference <= 0:
             return await self.bot.say("Please provide a gamma that's higher than your current count 😛")
+        if difference > 100000:
+            return await self.bot.say("Probably 30 years or something, idk")
 
         # is person jabba?
         if len(rows) == 0:

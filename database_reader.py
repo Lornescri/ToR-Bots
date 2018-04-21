@@ -34,6 +34,9 @@ def get_last_x_hours(reddit_name, hours=24):
         cursor.execute("select * from new_gammas where transcriber = %s", (reddit_name,))
         rows = cursor.fetchall()
 
+    if len(rows)==0:
+        return None
+
     rows = [x for x in rows if x["time"] > datetime.datetime.now()-datetime.timedelta(hours=hours)]
     return rows
 
