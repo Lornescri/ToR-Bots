@@ -263,3 +263,34 @@ def find_comments(name, text, all=False):
             cursor.execute("select comment_id, content from transcriptions where content like %s",
                        ('%' + text + '%'))
         return [(row["comment_id"], row["content"]) for row in cursor.fetchall()]
+def plot_history(name, whole=False):
+    with connection.cursor() as cursor:
+        cursor.execute("select * from new_gammas where transcriber = %s", (name,))
+        rows = cursor.fetchall()
+    times = [row["time"] for row in rows]
+    values = [row["new_gamma"] for row in rows]
+    if len(values) < 2:
+        return False
+    plt.plot(times, values, color="black")
+    first = values[0]
+    last = values[-1]
+    if whole or first <= 50 < last:
+        plt.axhline(y=51, color="lime")
+    if whole or first <= 100 < last:
+        plt.axhline(y=101, color="teal")
+    if whole or first <= 250 < last:
+        plt.axhline(y=251, color="purple")
+    if whole or first <= 500 < last:
+        plt.axhline(y=501, color="gold")
+    if whole or first < 1000 <= last:
+        plt.axhline(y=1000, color="aqua")
+    if whole or last >= 2500:
+        plt.axhline(y=2500, color="deeppink")
+    plt.xlabel("Time")
+    plt.ylabel("Gammas")
+    plt.xticks(rotation=90)
+    plt.gcf().subplots_adjust(bottom=0.3)
+    plt.title("Gamma history of /u/{}".format(name))
+    plt.savefig("graph.png")
+    plt.clf()
+    return "graph.png"
