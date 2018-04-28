@@ -21,6 +21,12 @@ class GraphCommands():
                                     "No history avaliable, sorry! (*You have to do 2 transcriptions since joining the discord server*)")
         else:
             await self.bot.send_file(ctx.message.channel, path)
+    @commands.command(pass_context=True)
+    async def multi_history(self, ctx, *people):
+        if len(people) < 2: return await self.bot.say("Please use !history to check the graph of just one person. Put two or more reddit usernanes after this command to use it")
+        path = database_reader.plot_multi_history(people)
+        if not path: return await self.bot.say("No history available.")
+        else: await self.bot.send_file(ctx.message.channel,path)
 
     @commands.command(pass_context=True)
     async def context_history(self, ctx, person:str = None):
@@ -39,6 +45,14 @@ class GraphCommands():
             await self.bot.send_message(ctx.message.channel,
                                     "No history avaliable, sorry!")
 
+        else:
+            await self.bot.send_file(ctx.message.channel, path)
+
+    @commands.command(pass_context=True)
+    async def distribution(self, ctx):
+        path = database_reader.plot_distribution()
+        if not path:
+            await self.bot.send_message(ctx.message.channel, "No distribution available, sorry!")
         else:
             await self.bot.send_file(ctx.message.channel, path)
 

@@ -70,43 +70,59 @@ def all_history():
 
     return "graph.png"
 
+def plot_multi_history(people):
+    
+    most = 0
+    cols = ["black", "green", "red", "teal", "purple", "gold", "deeppink"]
+    for i, name in enumerate(people):
+        with connection.cursor() as cursor:
+            cursor.execute("select * from new_gammas where transcriber = %s", (name,))
+            rows = cursor.fetchall()
 
-def plot_history(name, whole=False):
-    with connection.cursor() as cursor:
-        cursor.execute("select * from new_gammas where transcriber = %s", (name,))
-        rows = cursor.fetchall()
-
-    times = [row["time"] for row in rows]
-    values = [row["new_gamma"] for row in rows]
-
-    if len(values) < 2:
-        return False
-
-    plt.plot(times, values, color="black")
-    first = values[0]
-    last = values[-1]
-    if whole or first <= 50 < last:
-        plt.axhline(y=51, color="lime")
-    if whole or first <= 100 < last:
+        times = [row["time"] for row in rows]
+        values = [row["new_gamma"] for row in rows]
+        if len(values) < 2:
+            return False
+        if values[-1] > most: most = values[-1]
+        plt.plot(times, values, color=cols[i])
+    
+    #first = values[0]
+    #last = values[-1] 
+    whole = False
+    if whole or most >= 50: 
+        plt.axhline(y=51, color="lime") 
+    if whole or 100 < most:
         plt.axhline(y=101, color="teal")
-    if whole or first <= 250 < last:
+    if whole or 250 < most: 
         plt.axhline(y=251, color="purple")
-    if whole or first <= 500 < last:
+    if whole or 500 < most:
         plt.axhline(y=501, color="gold")
-    if whole or first < 1000 <= last:
+    if whole or 1000 <= most: 
         plt.axhline(y=1000, color="aqua")
-    if whole or last >= 2500:
+    if whole or most >= 2500:
         plt.axhline(y=2500, color="deeppink")
-    plt.xlabel("Time")
+    plt.xlabel("Time") 
     plt.ylabel("Gammas")
-    plt.xticks(rotation=90)
+    plt.legend(people)
+    plt.xticks(rotation=90) 
     plt.gcf().subplots_adjust(bottom=0.3)
-    plt.title("Gamma history of /u/{}".format(name))
+    plt.title("Multi-gamma history") 
     plt.savefig("graph.png")
     plt.clf()
-
     return "graph.png"
 
+def plot_distribution():
+    with connection.cursor() as cursor:
+        cursor.execute("select official_gamma_count from transcribers where official_gamma_count is not NULL and official_gamma_count > 0")
+        rows = cursor.fetchall()
+
+    rows = [row["official_gamma_count"] for row in rows]
+    rows.sort()
+    plt.title("Gamma distribution")
+    plt.plot(rows)
+    plt.savefig("graph.png")
+    plt.clf()
+    return "graph.png"
 
 def plot_rate(name):
 
