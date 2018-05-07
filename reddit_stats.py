@@ -1,6 +1,6 @@
 import praw
 import time
-
+import datetime
 import passwords_and_tokens
 import pymysql
 
@@ -106,8 +106,8 @@ def analyze_user(usr, limit=1000, ignore_last=False):
                 cursor.execute("UPDATE transcribers SET reference_comment = %s WHERE name = %s", (com.id, usr))
                 reference_comment = com.id
             elif trans_check(com.body):
-                cursor.execute("insert ignore into transcriptions (comment_id, transcriber, content, subreddit, found) VALUES (%s, %s, %s, %s, now())",
-                               (com.id, usr, com.body, com.subreddit.id))
+                cursor.execute("insert ignore into transcriptions (comment_id, transcriber, content, subreddit, found, created) VALUES (%s, %s, %s, %s, now(), %s)",
+                               (com.id, usr, com.body, com.subreddit.id, datetime.datetime.fromtimestamp(com.created)))
 
         cursor.execute("UPDATE transcribers SET counted_comments = counted_comments + %s WHERE name = %s", (i, usr))
 
