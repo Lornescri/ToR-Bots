@@ -1,0 +1,28 @@
+version: '3.1'
+
+services:
+  maria:
+    image: mariadb
+    restart: unless-stopped
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: voidandlornessecurepasswordZOOP3 
+    volumes:
+      - /mutual/ToR-Bots/maria:/var/lib/mysql
+  reddit_stats:
+    build: ./redditstats
+    restart: unless-stopped
+    depends_on:
+      - maria
+  charlie:
+    build: ./charlie
+    restart: unless-stopped
+    depends_on:
+     - maria
+  statsbot:
+    build: ./statsbot
+    restart: unless-stopped
+    depends_on:
+      - maria
+      - reddit_stats

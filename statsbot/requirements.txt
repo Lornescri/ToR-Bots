@@ -1,0 +1,4 @@
+praw
+pymysql
+discord.py
+matplotlib
