@@ -7,7 +7,7 @@ services:
     ports:
       - 3306:3306
     environment:
-      MYSQL_ROOT_PASSWORD: voidandlornessecurepasswordZOOP3 
+      MYSQL_ROOT_PASSWORD: [password]
     volumes:
       - /mutual/ToR-Bots/maria:/var/lib/mysql
   reddit_stats:
