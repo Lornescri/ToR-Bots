@@ -4,6 +4,31 @@ matplotlib.use("AGG")
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 import passwords_and_tokens
+import argparse, sys
+class ArgumentParser(argparse.ArgumentParser):    
+    def _get_action_from_name(self, name):
+        """Given a name, get the Action instance registered with this parser.
+        If only it were made available in the ArgumentError object. It is 
+        passed as it's first arg...
+        """
+        container = self._actions
+        if name is None:
+            return None
+        for action in container:
+            if '/'.join(action.option_strings) == name:
+                return action
+            elif action.metavar == name:
+                return action
+            elif action.dest == name:
+                return action
+
+    def error(self, message):
+        exc = sys.exc_info()[1]
+        if exc:
+            exc.argument = self._get_action_from_name(exc.argument_name)
+            raise exc
+        super(ArgumentParser, self).error(message)
+
 
 connection = pymysql.connect(host=passwords_and_tokens.sql_ip,
                              user=passwords_and_tokens.sql_user,
@@ -294,3 +319,19 @@ def plot_history(name, whole=False):
     plt.savefig("graph.png")
     plt.clf()
     return "graph.png"
+
+
+def plot_advanced_graph(args):
+    try:
+        parser = ArgumentParser(description='Plots graphs for torstats.')
+        parser.add_argument("--yaxis", "-y", choices=[
+            "transcriptions", "replies", "upvotes", "good_bot", "bad_bot", "good_human", "bad_human"
+        ], dest="yaxis")
+        parser.add_argument("--per-transcription", "-pt", dest="per_tr")
+        print(parser.parse_args(args))
+        with connection.cursor() as cursor:
+            cursor.execute("select comment_id from transcriptions where transcriber = %s", (name,))
+        
+    except Exception as e:
+        print(type(e), e)
+        return None

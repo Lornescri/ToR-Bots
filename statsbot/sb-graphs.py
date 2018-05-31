@@ -57,6 +57,14 @@ class GraphCommands():
             await self.bot.send_file(ctx.message.channel, path)
 
     @commands.command(pass_context=True)
+    async def advancedgraph(self, ctx, *args):
+        path = database_reader.plot_advanced_graph(args)
+        if not path:
+            await self.bot.send_message(ctx.message.channel, "Error, please see `!help advancedgraph`")
+        else:
+            await self.bot.send_file(ctx.message.channel, path)
+
+    @commands.command(pass_context=True)
     async def rate(self, ctx, person:str = None):
         name = get_redditor_name(person) if person else get_redditor_name(ctx.message.author.display_name)
         path = database_reader.plot_rate(get_redditor_name(name))
