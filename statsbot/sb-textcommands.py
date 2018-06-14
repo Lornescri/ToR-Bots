@@ -81,7 +81,54 @@ class TextCommands():
         embed = discord.Embed(title="Stats for /u/" + name,
                               description=output)
         await self.bot.send_message(ctx.message.channel, embed=embed)
+    
+    async def find(self, source):
+        p = reddit.submission(url=source)
+        tor = reddit.subreddit("TranscribersOfReddit")
+        archive = reddit.subreddit("tor_archive")
+        for i in tor.search(p.subreddit.display_name + " | Image | " + p.title, limit=50):
+            s = reddit.submission(url=i.url)
+            if s.id == p.id: 
+                return reddit.submission(url=i.url)
+        for i in archive.search(p.subreddit.display_name + " | Image | " + p.title, limit=50):
+            s = reddit.submission(url=reddit.submission(url=i.url).url)
+            if s.id == p.id: 
+                return reddit.submission(url=i.url)
+        return None
+    async def try_find_transcriber(self, tor_thread):
+        def getNestedDoneComment(comment):
+            for reply in comment.replies:
+                if not reply.author: continue
+                if (reply.author.name not in ["transcribot", "transcribersofreddit"]) and ("done" in reply.body.lower()) or ("deno" in reply.body.lower()): return reply
+                if len(reply.replies):
+                    return getNestedDoneComment(reply)
 
+        def getDoneComment(submission):
+            for comment in submission.comments:
+                if not comment.author: continue
+                if comment.author.name == "transcribot": continue
+                if comment.author.name == "transcribersofreddit":
+                    c = getNestedDoneComment(comment)
+                    if c: return c
+                    continue
+                if ("done" in comment.body.lower()) or ("deno" in comment.body.lower()): return comment
+            return None
+        c = getDoneComment(tor_thread)
+        if c: return c.author
+        else: return None
+
+                
+    @commands.command(pass_context=True)
+    async def source(self, ctx, post_url):
+        tor_thread = await self.find(post_url)
+        if not tor_thread: return await self.bot.say("I couldn't find that :( I sometimes struggle with generically labelled submissions like me_irl")
+        embed = discord.Embed(title=tor_thread.title.split("|")[2], url=tor_thread.shortlink)
+        embed.add_field(name="Flair", value=tor_thread.link_flair_text, inline=True)
+        if tor_thread.link_flair_text == "Completed!":
+            transcriber = await self.try_find_transcriber(tor_thread)
+            if transcriber: embed.add_field(name="Transcriber", value="/u/" + transcriber.name, inline=True)
+        embed.add_field(name="ToR Thread", value=tor_thread.shortlink, inline=True)
+        return await self.bot.send_message(ctx.message.channel, embed=embed)
     @commands.command(pass_context=True)
     async def allstats(self, ctx):
         trans_count, total_length, upvotes, good_bot, bad_bot, good_human, bad_human = database_reader.all_stats()
