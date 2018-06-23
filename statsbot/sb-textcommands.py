@@ -275,9 +275,5 @@ class TextCommands():
 
         await self.bot.say(f"From your rate over the past 48 hours, I estimate that it will take you `{time_}` to get from Γ{gamma} to Γ{future_gamma}")
 
-
-
-
-
 def setup(bot):
     bot.add_cog(TextCommands(bot))
