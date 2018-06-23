@@ -175,6 +175,49 @@ def plot_rate(name):
     connection.close()
     return "graph.png"
 
+def plot_all_rate():
+    connection = getConnection()
+    with connection.cursor() as cursor:
+        cursor.execute("select * from new_gammas")
+        rows = cursor.fetchall()
+
+
+    # Code gets number of days between when the bot was first collecting data, to now
+    start = datetime.datetime(2017, 11, 1)
+    end = datetime.datetime.now()
+    step = datetime.timedelta(days=1)
+
+    result = []
+    while start < end:
+        result.append(start)
+        start += step
+    
+    # Create new subplot because some funcs only work on subplots
+    fig, ax = plt.subplots(1,1) 
+
+    # Create dataset; a list of datetime objects
+    x = [mdates.epoch2num(time.mktime(row["time"].timetuple())) for row in rows]
+    
+    # Make
+    ax.hist(x, len(result))
+    # Set date format to be a bit shorter
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%d.%m.%y'))
+
+    # Rotate labels 90^o
+    ax.xaxis.set_tick_params(labelrotation=90.0)
+
+    # Don't cut off date
+    plt.gcf().subplots_adjust(bottom=0.22)
+
+    # Standard code
+    plt.xlabel("Time")
+    plt.ylabel("Gammas / Day")
+    plt.title("Gamma gain rate of the whole server")
+    plt.savefig("graph.png")
+    plt.clf()
+    connection.close()
+    return "graph.png"
+
 
 def get_total_gammas():
     connection = getConnection()

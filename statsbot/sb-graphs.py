@@ -64,6 +64,15 @@ class GraphCommands():
             await self.bot.send_message(ctx.message.channel,
                                     "No history avaliable, sorry! (*You have to do 2 transcriptions since joining the discord server*)")
         else:
+            await self.bot.send_file(ctx.message.channel, path) 
+
+    @commands.command(pass_context=True)
+    async def all_rate(self, ctx):
+        path = database_reader.plot_all_rate()
+        if not path:
+            await self.bot.send_message(ctx.message.channel,
+                                    "No history avaliable, sorry! (*You have to do 2 transcriptions since joining the discord server*)")
+        else:
             await self.bot.send_file(ctx.message.channel, path)    
 
 def setup(bot):
